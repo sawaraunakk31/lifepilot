@@ -7,6 +7,8 @@ tracks deadlines, and generates a personalised roadmap** — using a small team 
 This repository is a **working prototype**: intentionally simple, 100% free & open-source, and it runs
 **offline with no API keys and no Docker**.
 
+> 👥 **New teammate?** Follow the step-by-step **[SETUP.md](SETUP.md)** to install, run, and start pushing changes.
+
 ---
 
 ## What is built and working right now
