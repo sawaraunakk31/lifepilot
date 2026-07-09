@@ -1,0 +1,23 @@
+# Byte-compiled / venv / db
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.db
+*.sqlite3
+
+# Env
+.env
+
+# Security: never track certificate/key material
+*.pem
+*.key
+*.crt
+*.cer
+*.pfx
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

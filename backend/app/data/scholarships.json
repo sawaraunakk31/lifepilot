@@ -1,0 +1,230 @@
+[
+  {
+    "id": "nsp-post-matric-sc",
+    "title": "Post-Matric Scholarship for SC Students",
+    "provider": "Ministry of Social Justice & Empowerment (National Scholarship Portal)",
+    "url": "https://scholarships.gov.in/",
+    "amount": "Up to \u20b91,20,000 / year (tuition + maintenance)",
+    "deadline": "2026-10-31",
+    "category": "scholarship",
+    "description": "Financial assistance to SC students studying at post-matriculation or post-secondary stage.",
+    "criteria": {
+      "category": ["SC"],
+      "education_level": ["12th", "Diploma", "Undergraduate", "Postgraduate"],
+      "max_income": 250000,
+      "nationality": "Indian"
+    },
+    "documents": [
+      "Aadhaar card",
+      "Caste certificate (SC)",
+      "Income certificate (< \u20b92.5 lakh)",
+      "Previous year mark sheet",
+      "Bank account passbook (linked to Aadhaar)",
+      "Institution admission/fee receipt"
+    ]
+  },
+  {
+    "id": "nsp-post-matric-obc",
+    "title": "Post-Matric Scholarship for OBC Students",
+    "provider": "Ministry of Social Justice & Empowerment (National Scholarship Portal)",
+    "url": "https://scholarships.gov.in/",
+    "amount": "Up to \u20b910,000 / year",
+    "deadline": "2026-10-31",
+    "category": "scholarship",
+    "description": "Support for OBC students pursuing post-matric studies from low-income families.",
+    "criteria": {
+      "category": ["OBC"],
+      "education_level": ["12th", "Diploma", "Undergraduate", "Postgraduate"],
+      "max_income": 250000,
+      "nationality": "Indian"
+    },
+    "documents": [
+      "Aadhaar card",
+      "OBC certificate",
+      "Income certificate (< \u20b92.5 lakh)",
+      "Previous year mark sheet",
+      "Bank account passbook"
+    ]
+  },
+  {
+    "id": "pm-yasasvi",
+    "title": "PM YASASVI Scholarship (OBC/EBC/DNT)",
+    "provider": "Ministry of Social Justice & Empowerment",
+    "url": "https://yet.nta.ac.in/",
+    "amount": "\u20b975,000 - \u20b91,25,000 / year",
+    "deadline": "2026-09-15",
+    "category": "scholarship",
+    "description": "Merit-based scholarship for OBC, EBC and DNT students in classes 9 and 11, extendable to higher studies.",
+    "criteria": {
+      "category": ["OBC", "EWS"],
+      "education_level": ["9th", "10th", "11th", "12th"],
+      "max_income": 250000,
+      "max_age": 20,
+      "nationality": "Indian"
+    },
+    "documents": [
+      "Aadhaar card",
+      "Category certificate (OBC/EBC/DNT)",
+      "Income certificate (< \u20b92.5 lakh)",
+      "Class 8 or 10 mark sheet",
+      "School bonafide certificate"
+    ]
+  },
+  {
+    "id": "inspire-she",
+    "title": "INSPIRE Scholarship (SHE) for Science Students",
+    "provider": "Department of Science & Technology (DST)",
+    "url": "https://online-inspire.gov.in/",
+    "amount": "\u20b980,000 / year for 5 years",
+    "deadline": "2026-12-31",
+    "category": "scholarship",
+    "description": "Scholarship for top-rank students pursuing Bachelor's and Master's degrees in Natural & Basic Sciences.",
+    "criteria": {
+      "education_level": ["Undergraduate", "Postgraduate"],
+      "field_of_study": ["Science", "Physics", "Chemistry", "Mathematics", "Biology"],
+      "nationality": "Indian",
+      "max_age": 27
+    },
+    "documents": [
+      "Aadhaar card",
+      "Class 12 mark sheet (top rank)",
+      "College admission proof (science stream)",
+      "Bank account passbook"
+    ]
+  },
+  {
+    "id": "cm-vidyasiri-karnataka",
+    "title": "CM's Vidyasiri Scholarship (Karnataka)",
+    "provider": "Government of Karnataka - Backward Classes Welfare Dept",
+    "url": "https://ssp.postmatric.karnataka.gov.in/",
+    "amount": "\u20b91,500 / month (hostel/food allowance)",
+    "deadline": "2026-11-30",
+    "category": "scholarship",
+    "description": "Food and accommodation allowance for backward-class students in Karnataka who do not get government hostel seats.",
+    "criteria": {
+      "state": ["Karnataka"],
+      "category": ["OBC", "SC", "ST", "EWS"],
+      "education_level": ["Undergraduate", "Postgraduate", "Diploma"],
+      "max_income": 250000,
+      "nationality": "Indian"
+    },
+    "documents": [
+      "Aadhaar card",
+      "Karnataka domicile certificate",
+      "Caste & income certificate",
+      "College bonafide certificate",
+      "Bank account passbook"
+    ]
+  },
+  {
+    "id": "aicte-pragati-girls",
+    "title": "AICTE Pragati Scholarship for Girls",
+    "provider": "All India Council for Technical Education (AICTE)",
+    "url": "https://www.aicte-india.org/schemes/students-development-schemes",
+    "amount": "\u20b950,000 / year + \u20b910,000 contingency",
+    "deadline": "2026-10-15",
+    "category": "scholarship",
+    "description": "Scholarship encouraging girl students in technical (degree/diploma) education.",
+    "criteria": {
+      "gender": ["Female"],
+      "education_level": ["Undergraduate", "Diploma"],
+      "field_of_study": ["Engineering", "Technology", "Technical"],
+      "max_income": 800000,
+      "nationality": "Indian"
+    },
+    "documents": [
+      "Aadhaar card",
+      "Class 12 / diploma mark sheet",
+      "AICTE-approved institution admission proof",
+      "Family income certificate (< \u20b98 lakh)",
+      "Bank account passbook"
+    ]
+  },
+  {
+    "id": "swami-vivekananda-disability",
+    "title": "National Scholarship for Students with Disabilities",
+    "provider": "Department of Empowerment of Persons with Disabilities (DEPwD)",
+    "url": "https://scholarships.gov.in/",
+    "amount": "Up to \u20b930,000 / year + disability allowance",
+    "deadline": "2026-11-15",
+    "category": "scholarship",
+    "description": "Post-matric scholarship for students with 40%+ disability pursuing higher education.",
+    "criteria": {
+      "disability": true,
+      "education_level": ["12th", "Diploma", "Undergraduate", "Postgraduate"],
+      "max_income": 250000,
+      "nationality": "Indian"
+    },
+    "documents": [
+      "Aadhaar card",
+      "Disability certificate (40%+ )",
+      "Income certificate",
+      "Previous mark sheet",
+      "Bank account passbook"
+    ]
+  },
+  {
+    "id": "central-sector-merit",
+    "title": "Central Sector Scheme of Scholarship (Merit)",
+    "provider": "Ministry of Education",
+    "url": "https://scholarships.gov.in/",
+    "amount": "\u20b912,000 - \u20b920,000 / year",
+    "deadline": "2026-10-31",
+    "category": "scholarship",
+    "description": "Merit scholarship for meritorious students from low-income families for graduate/postgraduate studies.",
+    "criteria": {
+      "education_level": ["Undergraduate", "Postgraduate"],
+      "max_income": 450000,
+      "nationality": "Indian",
+      "max_age": 25
+    },
+    "documents": [
+      "Aadhaar card",
+      "Class 12 mark sheet (above cut-off percentile)",
+      "Income certificate (< \u20b94.5 lakh)",
+      "College admission proof",
+      "Bank account passbook"
+    ]
+  },
+  {
+    "id": "pmkvy-skill",
+    "title": "PM Kaushal Vikas Yojana (Skill Training + Stipend)",
+    "provider": "Ministry of Skill Development & Entrepreneurship",
+    "url": "https://www.pmkvyofficial.org/",
+    "amount": "Free training + placement assistance",
+    "deadline": "2026-12-31",
+    "category": "skilling",
+    "description": "Free short-term skill training and certification for youth to improve employability.",
+    "criteria": {
+      "education_level": ["10th", "12th", "Diploma", "Undergraduate"],
+      "max_age": 35,
+      "nationality": "Indian"
+    },
+    "documents": [
+      "Aadhaar card",
+      "Bank account passbook",
+      "Passport-size photo"
+    ]
+  },
+  {
+    "id": "startup-india-seed",
+    "title": "Startup India Seed Fund Scheme",
+    "provider": "DPIIT, Government of India",
+    "url": "https://seedfund.startupindia.gov.in/",
+    "amount": "Up to \u20b920 lakh (grant) / \u20b950 lakh (investment)",
+    "deadline": "2026-12-31",
+    "category": "grant",
+    "description": "Seed funding for early-stage startups for proof of concept, prototype development and market entry.",
+    "criteria": {
+      "education_level": ["Undergraduate", "Postgraduate", "Diploma", "12th"],
+      "nationality": "Indian",
+      "goals_keywords": ["startup", "business", "entrepreneur", "founder", "company"]
+    },
+    "documents": [
+      "DPIIT startup recognition certificate",
+      "Company incorporation certificate",
+      "Pitch deck / business plan",
+      "Founder identity proof (Aadhaar/PAN)"
+    ]
+  }
+]

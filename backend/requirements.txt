@@ -1,0 +1,11 @@
+# LifePilot backend dependencies (all free & open-source)
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+SQLAlchemy==2.0.36
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+python-multipart==0.0.20
+# NOTE: no HTTP client dependency (httpx/requests) on purpose — those pull in
+# `certifi` which ships a cacert.pem bundle. We use Python's stdlib urllib for
+# the optional localhost Ollama call, so NO .pem/certificate files are installed.
