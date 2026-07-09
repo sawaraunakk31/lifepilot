@@ -265,7 +265,7 @@ function renderCharts(ins) {
   state.charts.mix?.destroy();
   state.charts.mix = new Chart($('#chartMix'), {
     type: 'doughnut',
-    data: { labels: ['Eligible', 'Partial'], datasets: [{ data: [ins.eligible_count, ins.partial_count], backgroundColor: ['#34d399', '#fbbf24'], borderWidth: 0, hoverOffset: 6 }] },
+    data: { labels: ['Eligible', 'Partial'], datasets: [{ data: [ins.eligible_count, ins.partial_count], backgroundColor: ['#34d399', '#e4b265'], borderWidth: 0, hoverOffset: 6 }] },
     options: { cutout: '68%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14 } } } },
   });
 
@@ -276,7 +276,7 @@ function renderCharts(ins) {
     type: 'bar',
     data: {
       labels: elig.map((x) => x.t.length > 26 ? x.t.slice(0, 24) + '…' : x.t),
-      datasets: [{ data: elig.map((x) => x.v), backgroundColor: (c) => { const g = c.chart.ctx.createLinearGradient(0, 0, c.chart.width, 0); g.addColorStop(0, '#7c5cff'); g.addColorStop(1, '#22d3ee'); return g; }, borderRadius: 6, barThickness: 16 }],
+      datasets: [{ data: elig.map((x) => x.v), backgroundColor: (c) => { const g = c.chart.ctx.createLinearGradient(0, 0, c.chart.width, 0); g.addColorStop(0, '#14b8a6'); g.addColorStop(1, '#34d399'); return g; }, borderRadius: 6, barThickness: 16 }],
     },
     options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,.06)' }, ticks: { callback: (v) => '₹' + (v / 1000) + 'k' } }, y: { grid: { display: false } } } },
   });
@@ -317,7 +317,7 @@ function matchCard(m) {
   const reasons = (m.reasons || []).map((r) => `<li class="flex gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 mt-0.5" style="color:var(--good)"></i><span>${esc(r)}</span></li>`).join('');
   const unmet = (m.unmet || []).map((r) => `<li class="flex gap-1.5"><i data-lucide="dot" class="w-3.5 h-3.5 mt-0.5" style="color:var(--warn)"></i><span>${esc(r)}</span></li>`).join('');
   const docs = (m.documents || []).map((d) => `<li class="flex gap-1.5 text-[var(--muted)]"><i data-lucide="file" class="w-3.5 h-3.5 mt-0.5"></i>${esc(d)}</li>`).join('');
-  const road = (m.roadmap || []).map((s, i) => `<li class="flex gap-2"><span class="w-5 h-5 shrink-0 rounded-full text-[10px] font-bold flex items-center justify-center" style="background:rgba(124,92,255,.2);color:#c4b5fd">${i + 1}</span><span>${esc(s)}</span></li>`).join('');
+  const road = (m.roadmap || []).map((s, i) => `<li class="flex gap-2"><span class="w-5 h-5 shrink-0 rounded-full text-[10px] font-bold flex items-center justify-center" style="background:rgba(20,184,166,.2);color:#5eead4">${i + 1}</span><span>${esc(s)}</span></li>`).join('');
 
   return `<div class="glass glass-hover rounded-2xl p-5">
     <div class="flex items-start justify-between gap-3">
@@ -326,20 +326,20 @@ function matchCard(m) {
         <p class="text-[11px] text-[var(--muted)] mt-0.5">${esc(m.provider || '')}</p></div>
       <div class="text-right shrink-0"><div class="font-display text-2xl font-bold" style="color:${col}">${Math.round(m.score * 100)}%</div><div class="text-[10px] text-[var(--muted)]">fit</div></div>
     </div>
-    <div class="h-1 rounded-full mt-3 overflow-hidden" style="background:rgba(255,255,255,.07)"><div style="width:${Math.round(m.score * 100)}%;height:100%;background:linear-gradient(90deg,#7c5cff,#22d3ee)"></div></div>
+    <div class="h-1 rounded-full mt-3 overflow-hidden" style="background:rgba(255,255,255,.07)"><div style="width:${Math.round(m.score * 100)}%;height:100%;background:linear-gradient(90deg,#14b8a6,#34d399)"></div></div>
     <div class="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-[var(--muted)]"><span>💰 ${esc(m.amount || '—')}</span><span>📅 ${dlTxt}</span></div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 text-xs">
       ${reasons ? `<div><p class="font-semibold mb-1">Why you qualify</p><ul class="space-y-1">${reasons}</ul></div>` : ''}
       ${unmet ? `<div><p class="font-semibold mb-1">Gaps to check</p><ul class="space-y-1">${unmet}</ul></div>` : ''}
     </div>
     <details class="mt-3">
-      <summary class="cursor-pointer text-xs font-semibold flex items-center gap-1" style="color:#a78bfa"><i data-lucide="list-checks" class="w-3.5 h-3.5"></i> Documents & roadmap</summary>
+      <summary class="cursor-pointer text-xs font-semibold flex items-center gap-1" style="color:#5eead4"><i data-lucide="list-checks" class="w-3.5 h-3.5"></i> Documents & roadmap</summary>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 text-xs">
         <div><p class="font-semibold mb-1">Documents</p><ul class="space-y-1">${docs}</ul></div>
         <div><p class="font-semibold mb-1">Roadmap</p><ol class="space-y-1.5">${road}</ol></div>
       </div>
     </details>
-    ${m.url ? `<a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-3 text-xs font-semibold" style="color:#67e8f9">Open official portal <i data-lucide="external-link" class="w-3 h-3"></i></a>` : ''}
+    ${m.url ? `<a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-3 text-xs font-semibold" style="color:#5eead4">Open official portal <i data-lucide="external-link" class="w-3 h-3"></i></a>` : ''}
   </div>`;
 }
 
@@ -390,7 +390,7 @@ async function runSimulation() {
 $('#simIncome')?.addEventListener('input', () => { updateSliderFill(); clearTimeout(simTimer); simTimer = setTimeout(runSimulation, 220); });
 
 // ───────── ASSISTANT ─────────
-const SUGGESTIONS = ['How much can I get?', 'Which schemes am I eligible for?', 'What documents do I need?', 'Show me the deadlines'];
+const SUGGESTIONS = ['How much can I unlock?', 'Which schemes am I eligible for?', 'What documents do I need?', 'When are the deadlines?', 'How do I apply for Pragati?', 'Why am I not eligible for more?'];
 function renderSuggestions() {
   $('#chatSuggest').innerHTML = SUGGESTIONS.map((s) => `<span class="chip" data-suggest="${esc(s)}">${esc(s)}</span>`).join('');
   $$('[data-suggest]').forEach((c) => c.addEventListener('click', () => { $('#chatInput').value = c.dataset.suggest; $('#chatForm').requestSubmit(); }));
@@ -424,7 +424,7 @@ function renderDocuments() {
   list.innerHTML = docs.map((d) => {
     const key = d.document.toLowerCase(); const owned = state.ownedDocs.has(key);
     return `<label class="flex items-center gap-3 glass rounded-xl px-3 py-2.5 cursor-pointer glass-hover">
-      <input type="checkbox" class="accent-[#7c5cff] w-4 h-4" data-doc="${esc(key)}" ${owned ? 'checked' : ''} />
+      <input type="checkbox" class="accent-[#14b8a6] w-4 h-4" data-doc="${esc(key)}" ${owned ? 'checked' : ''} />
       <div class="flex-1 min-w-0"><p class="text-sm ${owned ? 'line-through text-[var(--muted)]' : ''}">${esc(d.document)}</p>
       <p class="text-[11px] text-[var(--muted)]">Needed by ${d.used_by} scheme${d.used_by === 1 ? '' : 's'}</p></div>
       ${owned ? '<i data-lucide="check-circle-2" class="w-4 h-4" style="color:var(--good)"></i>' : ''}
@@ -453,11 +453,11 @@ function renderActivity() {
     state.run.logs.map((l) => {
       const conf = Math.round((l.confidence || 0) * 100);
       return `<div class="relative">
-        <div class="absolute -left-[22px] top-1 w-5 h-5 rounded-full glass flex items-center justify-center"><i data-lucide="${AGENT_ICON[l.agent] || 'bot'}" class="w-3 h-3" style="color:#a78bfa"></i></div>
+        <div class="absolute -left-[22px] top-1 w-5 h-5 rounded-full glass flex items-center justify-center"><i data-lucide="${AGENT_ICON[l.agent] || 'bot'}" class="w-3 h-3" style="color:#5eead4"></i></div>
         <div class="glass rounded-xl p-3">
           <div class="flex items-center justify-between"><span class="text-xs font-bold">${esc(l.agent)}</span><span class="text-[11px] text-[var(--muted)]">${conf}%</span></div>
           <p class="text-xs text-[var(--muted)] mt-1">${esc(l.message)}</p>
-          <div class="h-1 rounded-full mt-2 overflow-hidden" style="background:rgba(255,255,255,.07)"><div style="width:${conf}%;height:100%;background:linear-gradient(90deg,#7c5cff,#22d3ee)"></div></div>
+          <div class="h-1 rounded-full mt-2 overflow-hidden" style="background:rgba(255,255,255,.07)"><div style="width:${conf}%;height:100%;background:linear-gradient(90deg,#14b8a6,#34d399)"></div></div>
         </div></div>`;
     }).join('');
   icons();
@@ -467,7 +467,7 @@ function renderActivity() {
 function fireConfetti() {
   const c = document.createElement('canvas'); c.id = 'confetti'; document.body.appendChild(c);
   const ctx = c.getContext('2d'); const W = c.width = innerWidth, H = c.height = innerHeight;
-  const colors = ['#7c5cff', '#22d3ee', '#f472b6', '#34d399', '#fbbf24'];
+  const colors = ['#14b8a6', '#34d399', '#5eead4', '#e4b265', '#6ee7b7'];
   const parts = Array.from({ length: 150 }, (_, i) => ({
     x: W / 2 + (Math.random() - .5) * 260, y: H * 0.28,
     vx: (Math.random() - .5) * 11, vy: Math.random() * -9 - 4,
@@ -595,6 +595,21 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowDown') { e.preventDefault(); paletteIdx = Math.min(paletteIdx + 1, paletteItems.length - 1); highlightPalette(); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); paletteIdx = Math.max(paletteIdx - 1, 0); highlightPalette(); }
   else if (e.key === 'Enter') { paletteItems[paletteIdx]?.run(); closePalette(); }
+});
+
+// ───────── landing curtain ─────────
+const landingEl = $('#landing');
+let landingOpened = false;
+function enterApp() {
+  if (landingOpened || !landingEl) return; landingOpened = true;
+  landingEl.classList.add('open');
+  setTimeout(() => { landingEl.style.display = 'none'; }, 1150);
+}
+$('#enterBtn')?.addEventListener('click', enterApp);
+document.addEventListener('keydown', (e) => {
+  if (!landingOpened && landingEl && getComputedStyle(landingEl).display !== 'none' && e.key === 'Enter') {
+    e.preventDefault(); enterApp();
+  }
 });
 
 // ───────── boot ─────────
