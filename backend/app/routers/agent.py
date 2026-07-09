@@ -4,6 +4,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -11,6 +12,7 @@ from app.database import get_db
 from app import models, schemas
 from app.agents.orchestrator import Orchestrator
 from app.services import assistant as assistant_service
+from app.services import calendar as calendar_service
 
 router = APIRouter(prefix="/api/agent", tags=["agent"])
 
@@ -64,6 +66,21 @@ def assistant(payload: schemas.AssistantRequest, db: Session = Depends(get_db)):
     result = Orchestrator().run(profile)
     reply = assistant_service.answer(payload.question, result["matches"], profile.name)
     return schemas.AssistantResponse(**reply)
+
+
+@router.get("/calendar/{profile_id}")
+def calendar(profile_id: int, db: Session = Depends(get_db)):
+    """Download eligible-scheme deadlines as an .ics calendar file."""
+    profile = db.get(models.Profile, profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    result = Orchestrator().run(profile)
+    ics = calendar_service.build_ics(result["matches"], only_eligible=True)
+    return Response(
+        content=ics,
+        media_type="text/calendar",
+        headers={"Content-Disposition": "attachment; filename=lifepilot-deadlines.ics"},
+    )
 
 
 @router.get("/runs/{profile_id}", response_model=list[schemas.AgentRunOut])

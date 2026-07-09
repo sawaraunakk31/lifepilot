@@ -154,3 +154,40 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px;
 
 details > summary { list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
+
+/* ───────── Command palette ───────── */
+#palette { background: rgba(4,5,10,.6); backdrop-filter: blur(6px); }
+.palette-box { width: min(640px, 92vw); margin: 12vh auto 0; overflow: hidden; animation: paletteIn .22s cubic-bezier(.2,.8,.2,1); }
+@keyframes paletteIn { from { opacity: 0; transform: translateY(-12px) scale(.98); } to { opacity: 1; transform: none; } }
+.palette-item { display: flex; align-items: center; gap: .7rem; padding: .7rem .9rem; border-radius: .7rem; cursor: pointer; font-size: .9rem; color: var(--muted); }
+.palette-item .kbd { margin-left: auto; font-size: .68rem; color: var(--muted); border: 1px solid var(--border); border-radius: .35rem; padding: .05rem .35rem; }
+.palette-item.active, .palette-item:hover { background: linear-gradient(100deg, rgba(124,92,255,.22), rgba(34,211,238,.12)); color: #fff; }
+
+/* ───────── 3D tilt ───────── */
+.tilt { transform-style: preserve-3d; transition: transform .18s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+
+/* ───────── Scroll reveal ───────── */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+
+/* ───────── Confetti ───────── */
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 70; }
+
+/* ───────── Keyboard hint ───────── */
+.khint { font-size: .68rem; border: 1px solid var(--border); border-radius: .4rem; padding: .1rem .4rem; color: var(--muted); }
+
+/* ───────── Print action plan ───────── */
+#printArea { display: none; }
+@media print {
+  .aurora, .grain::before, aside, header, #toasts, #palette, #overlay, #confetti,
+  .view, #mobileNav, #rerunBtn, #ctaProfile { display: none !important; }
+  body { background: #fff !important; color: #111 !important; }
+  #printArea { display: block !important; padding: 0; }
+  #printArea h1 { font-size: 22px; margin: 0 0 4px; }
+  #printArea h2 { font-size: 15px; margin: 18px 0 6px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+  #printArea .p-scheme { break-inside: avoid; margin: 10px 0; }
+  #printArea .p-muted { color: #555; font-size: 12px; }
+  #printArea ul, #printArea ol { margin: 4px 0 4px 18px; font-size: 12px; }
+  #printArea .p-meta { font-size: 12px; color: #333; }
+}
+

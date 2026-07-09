@@ -16,15 +16,19 @@ from app.config import settings
 from app.database import init_db
 from app.llm.provider import get_provider
 from app.routers import agent, opportunities, profiles
+from app.security import add_security
 
-app = FastAPI(title=settings.app_name, version="0.1.0")
+app = FastAPI(title=settings.app_name, version="0.2.0")
+
+# Security hardening: strict headers + CSP + per-IP rate limiting.
+add_security(app)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.origins_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type"],
 )
 
 

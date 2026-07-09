@@ -155,7 +155,7 @@ $('#profileForm')?.addEventListener('submit', async (e) => {
     state.profileId = profile.id; state.profile = payload;
     localStorage.setItem('lp_pid', profile.id);
     localStorage.setItem('lp_profile', JSON.stringify(payload));
-    await runAgents();
+    await runAgents(true);
     switchView('dashboard');
     toast('LifePilot finished scanning your opportunities', 'good');
   } catch (err) {
@@ -164,18 +164,19 @@ $('#profileForm')?.addEventListener('submit', async (e) => {
 });
 
 // ───────── run agents ─────────
-async function runAgents() {
+async function runAgents(celebrate = false) {
   if (!state.profileId) return;
   const data = await api(`/api/agent/run/${state.profileId}`, { method: 'POST' });
   state.run = data;
   state.baseline = { eligible: data.insights.eligible_count, benefit: data.insights.estimated_annual_benefit };
   $('#rerunBtn').classList.remove('hidden'); $('#rerunBtn').classList.add('flex');
   renderAll();
+  if (celebrate && data.insights.eligible_count > 0) setTimeout(fireConfetti, 350);
 }
 
 $('#rerunBtn')?.addEventListener('click', async () => {
   showOverlay();
-  try { await runAgents(); toast('Refreshed', 'good'); } catch (e) { toast(e.message, 'bad'); } finally { hideOverlay(); }
+  try { await runAgents(true); toast('Refreshed', 'good'); } catch (e) { toast(e.message, 'bad'); } finally { hideOverlay(); }
 });
 
 // ───────── render orchestration ─────────
@@ -253,6 +254,7 @@ function renderDashboard() {
   }).join('') : '<p class="text-xs text-[var(--muted)]">No open deadlines found.</p>';
 
   icons();
+  applyPostEffects();
 }
 
 function renderCharts(ins) {
@@ -461,11 +463,146 @@ function renderActivity() {
   icons();
 }
 
+// ───────── premium UX: confetti, tilt, magnetic ─────────
+function fireConfetti() {
+  const c = document.createElement('canvas'); c.id = 'confetti'; document.body.appendChild(c);
+  const ctx = c.getContext('2d'); const W = c.width = innerWidth, H = c.height = innerHeight;
+  const colors = ['#7c5cff', '#22d3ee', '#f472b6', '#34d399', '#fbbf24'];
+  const parts = Array.from({ length: 150 }, (_, i) => ({
+    x: W / 2 + (Math.random() - .5) * 260, y: H * 0.28,
+    vx: (Math.random() - .5) * 11, vy: Math.random() * -9 - 4,
+    r: Math.random() * 6 + 3, col: colors[i % colors.length],
+    rot: Math.random() * 6, vr: (Math.random() - .5) * .5, life: 0,
+  }));
+  const t0 = performance.now();
+  function frame(t) {
+    ctx.clearRect(0, 0, W, H); let alive = false;
+    for (const p of parts) {
+      p.vy += 0.25; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life += 0.008;
+      if (p.y < H + 30 && p.life < 1) alive = true;
+      ctx.save(); ctx.globalAlpha = Math.max(0, 1 - p.life); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.fillStyle = p.col; ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 0.6); ctx.restore();
+    }
+    if (alive && t - t0 < 2800) requestAnimationFrame(frame); else c.remove();
+  }
+  requestAnimationFrame(frame);
+}
+
+function setupTilt() {
+  $$('[data-tilt]').forEach((el) => {
+    if (el._tilt) return; el._tilt = true; el.classList.add('tilt');
+    el.addEventListener('mousemove', (e) => {
+      const r = el.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - .5, py = (e.clientY - r.top) / r.height - .5;
+      el.style.transform = `perspective(900px) rotateX(${(-py * 4).toFixed(2)}deg) rotateY(${(px * 5).toFixed(2)}deg)`;
+    });
+    el.addEventListener('mouseleave', () => { el.style.transform = ''; });
+  });
+}
+
+function setupMagnetic() {
+  $$('.btn-primary').forEach((b) => {
+    if (b._mag) return; b._mag = true;
+    b.addEventListener('mousemove', (e) => {
+      const r = b.getBoundingClientRect();
+      b.style.transform = `translate(${((e.clientX - r.left) / r.width - .5) * 6}px, ${((e.clientY - r.top) / r.height - .5) * 6}px)`;
+    });
+    b.addEventListener('mouseleave', () => { b.style.transform = ''; });
+  });
+}
+
+function applyPostEffects() { setupTilt(); setupMagnetic(); }
+
+// ───────── calendar (.ics) + print action plan ─────────
+function downloadCalendar() {
+  if (!state.profileId) { toast('Create a profile first', 'warn'); switchView('profile'); return; }
+  const a = document.createElement('a');
+  a.href = `/api/agent/calendar/${state.profileId}`; a.download = 'lifepilot-deadlines.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('Calendar file downloading — import it into Google/Apple/Outlook', 'good');
+}
+
+function printActionPlan() {
+  if (!state.run) { toast('Run LifePilot first', 'warn'); switchView('profile'); return; }
+  const ins = state.run.insights;
+  const elig = state.run.matches.filter((m) => m.eligible);
+  const docs = ins.master_documents || [];
+  const scheme = (m) => `
+    <div class="p-scheme">
+      <strong>${esc(m.title)}</strong> — <span class="p-meta">${esc(m.amount || '')}</span><br/>
+      <span class="p-muted">${esc(m.provider || '')} · Deadline: ${esc(m.deadline || 'see portal')} · ${esc(m.url || '')}</span>
+      <div><em>Roadmap:</em><ol>${(m.roadmap || []).map((s) => `<li>${esc(s)}</li>`).join('')}</ol></div>
+    </div>`;
+  $('#printArea').innerHTML = `
+    <h1>LifePilot — Personalised Action Plan</h1>
+    <div class="p-muted">Prepared for ${esc(state.profile?.name || 'you')} · Generated ${new Date().toLocaleDateString()}</div>
+    <div class="p-meta" style="margin-top:8px">Estimated potential value: <strong>${esc(ins.estimated_benefit_label)}/year</strong>
+      · ${ins.eligible_count} eligible scheme(s) · Readiness ${computeReadiness().pct}%</div>
+    <h2>Eligible opportunities (${elig.length})</h2>
+    ${elig.map(scheme).join('') || '<p class="p-muted">No fully-eligible schemes yet.</p>'}
+    <h2>Combined document checklist</h2>
+    <ul>${docs.map((d) => `<li>${esc(d.document)} — needed by ${d.used_by} scheme(s)</li>`).join('')}</ul>
+    <div class="p-muted" style="margin-top:14px">Generated locally by LifePilot. No data left your device.</div>`;
+  window.print();
+}
+
+$('#calBtn')?.addEventListener('click', downloadCalendar);
+$('#printBtn')?.addEventListener('click', printActionPlan);
+
+// ───────── command palette ─────────
+const PALETTE = [
+  { icon: 'layout-dashboard', label: 'Go to Dashboard', keys: 'home overview', run: () => switchView('dashboard') },
+  { icon: 'compass', label: 'Go to Discover', keys: 'opportunities schemes', run: () => switchView('discover') },
+  { icon: 'sliders-horizontal', label: 'Open What-If Simulator', keys: 'simulate income', run: () => switchView('simulator') },
+  { icon: 'sparkles', label: 'Open AI Assistant', keys: 'chat ask', run: () => switchView('assistant') },
+  { icon: 'folder-check', label: 'Go to Documents', keys: 'checklist readiness', run: () => switchView('documents') },
+  { icon: 'activity', label: 'Go to Agent Activity', keys: 'logs agents', run: () => switchView('activity') },
+  { icon: 'user-round-cog', label: 'Edit Profile', keys: 'settings profile', run: () => switchView('profile') },
+  { icon: 'refresh-cw', label: 'Re-run agents', keys: 'refresh update', run: () => $('#rerunBtn').click() },
+  { icon: 'calendar-plus', label: 'Add deadlines to calendar', keys: 'ics reminder', run: downloadCalendar },
+  { icon: 'printer', label: 'Print action plan', keys: 'pdf export', run: printActionPlan },
+  { icon: 'wand-2', label: 'Load example profile', keys: 'demo sample', run: () => { switchView('profile'); $('#exampleBtn').click(); } },
+];
+let paletteIdx = 0, paletteItems = [];
+function openPalette() {
+  $('#palette').style.display = 'block'; const inp = $('#paletteInput'); inp.value = ''; renderPalette(''); inp.focus();
+}
+function closePalette() { $('#palette').style.display = 'none'; }
+function renderPalette(q) {
+  q = q.toLowerCase();
+  paletteItems = PALETTE.filter((p) => !q || (p.label + ' ' + p.keys).toLowerCase().includes(q));
+  paletteIdx = 0;
+  $('#paletteList').innerHTML = paletteItems.map((p, i) => `
+    <div class="palette-item ${i === 0 ? 'active' : ''}" data-i="${i}">
+      <i data-lucide="${p.icon}" class="w-4 h-4"></i><span>${esc(p.label)}</span>
+    </div>`).join('') || '<div class="palette-item">No matching commands</div>';
+  icons();
+  $$('#paletteList .palette-item[data-i]').forEach((el) => {
+    el.addEventListener('click', () => { paletteItems[+el.dataset.i]?.run(); closePalette(); });
+    el.addEventListener('mousemove', () => { paletteIdx = +el.dataset.i; highlightPalette(); });
+  });
+}
+function highlightPalette() {
+  $$('#paletteList .palette-item[data-i]').forEach((el) => el.classList.toggle('active', +el.dataset.i === paletteIdx));
+}
+$('#paletteInput')?.addEventListener('input', (e) => renderPalette(e.target.value));
+$('#paletteBtn')?.addEventListener('click', openPalette);
+$('#palette')?.addEventListener('click', (e) => { if (e.target.id === 'palette') closePalette(); });
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('#palette').style.display === 'block' ? closePalette() : openPalette(); return; }
+  if ($('#palette').style.display !== 'block') return;
+  if (e.key === 'Escape') closePalette();
+  else if (e.key === 'ArrowDown') { e.preventDefault(); paletteIdx = Math.min(paletteIdx + 1, paletteItems.length - 1); highlightPalette(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); paletteIdx = Math.max(paletteIdx - 1, 0); highlightPalette(); }
+  else if (e.key === 'Enter') { paletteItems[paletteIdx]?.run(); closePalette(); }
+});
+
 // ───────── boot ─────────
 async function boot() {
   icons();
   renderSuggestions();
   updateSliderFill();
+  setupMagnetic();
   checkHealth();
   if (state.profileId) {
     showOverlay();

@@ -7,15 +7,6 @@
 
   <!-- Reputable free CDNs only: Tailwind, Google Fonts, Chart.js, Lucide -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { display: ['Space Grotesk', 'Inter', 'sans-serif'], sans: ['Inter', 'sans-serif'] },
-        },
-      },
-    };
-  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -70,6 +61,9 @@
           <p id="pageSub" class="text-xs text-[var(--muted)]">Your personalised opportunity cockpit</p>
         </div>
         <div class="flex items-center gap-2">
+          <button id="paletteBtn" class="btn btn-ghost px-3 py-2 hidden sm:flex items-center gap-2 text-xs" title="Command palette">
+            <i data-lucide="command" class="w-3.5 h-3.5"></i><span class="khint">Ctrl K</span>
+          </button>
           <select id="mobileNav" class="md:hidden field w-40 py-2">
             <option value="dashboard">Dashboard</option><option value="discover">Discover</option>
             <option value="simulator">Simulator</option><option value="assistant">Assistant</option>
@@ -106,7 +100,7 @@
           <div id="dashContent" class="hidden space-y-5">
             <!-- Hero -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 stagger">
-              <div class="lg:col-span-2 glass glass-hover rounded-3xl p-6 relative overflow-hidden">
+              <div class="lg:col-span-2 glass glass-hover rounded-3xl p-6 relative overflow-hidden" data-tilt>
                 <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full" style="background:radial-gradient(circle,rgba(124,92,255,.4),transparent 70%)"></div>
                 <p class="text-xs uppercase tracking-widest text-[var(--muted)] mb-2">Estimated benefits you can unlock</p>
                 <div class="flex items-end gap-2">
@@ -117,10 +111,12 @@
                 <div class="flex gap-2 mt-4 flex-wrap">
                   <button class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5" data-nav="discover"><i data-lucide="compass" class="w-3.5 h-3.5"></i> View opportunities</button>
                   <button class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5" data-nav="simulator"><i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i> Run a what-if</button>
+                  <button id="calBtn" class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5"><i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> Add deadlines to calendar</button>
+                  <button id="printBtn" class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5"><i data-lucide="printer" class="w-3.5 h-3.5"></i> Print action plan</button>
                 </div>
               </div>
 
-              <div class="glass glass-hover rounded-3xl p-6 flex items-center gap-5">
+              <div class="glass glass-hover rounded-3xl p-6 flex items-center gap-5" data-tilt>
                 <div class="relative w-28 h-28 shrink-0">
                   <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
                     <circle cx="60" cy="60" r="52" fill="none" stroke-width="12" class="ring-track" />
@@ -157,7 +153,7 @@
 
             <!-- Top pick + deadlines -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 stagger">
-              <div id="topPick" class="glass glass-hover rounded-3xl p-6"></div>
+              <div id="topPick" class="glass glass-hover rounded-3xl p-6" data-tilt></div>
               <div class="glass rounded-3xl p-6">
                 <p class="font-semibold text-sm mb-3 flex items-center gap-2"><i data-lucide="alarm-clock" class="w-4 h-4 text-[var(--warn)]"></i> Deadline radar</p>
                 <div id="deadlineList" class="space-y-2"></div>
@@ -299,6 +295,20 @@
       </main>
     </div>
   </div>
+
+  <!-- Command palette -->
+  <div id="palette" class="fixed inset-0 z-[60] hidden">
+    <div class="palette-box glass rounded-2xl">
+      <div class="flex items-center gap-2 px-4 py-3 border-b" style="border-color:var(--border)">
+        <i data-lucide="search" class="w-4 h-4 text-[var(--muted)]"></i>
+        <input id="paletteInput" class="bg-transparent flex-1 outline-none text-sm" placeholder="Type a command or search… (Esc to close)" autocomplete="off" />
+      </div>
+      <div id="paletteList" class="p-2 max-h-[46vh] overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- Printable action plan (hidden on screen) -->
+  <div id="printArea"></div>
 
   <!-- Loading overlay -->
   <div id="overlay" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(7,8,13,.72);backdrop-filter:blur(6px)">

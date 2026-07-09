@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     environment: str = "development"
 
     database_url: str = "sqlite:///./lifepilot.db"
-    allowed_origins: str = "*"
+    # Frontend is served same-origin, so the API only needs to trust localhost by default.
+    allowed_origins: str = "http://127.0.0.1:8000,http://localhost:8000"
 
     # LLM
     llm_provider: str = "mock"  # "mock" | "ollama"

@@ -21,6 +21,9 @@ This repository is a **working prototype**: intentionally simple, 100% free & op
 | **AI Assistant** | ✅ Working | Chat grounded on *your real matches* — no hallucinated schemes |
 | **Application readiness engine** | ✅ Working | De-duplicated master document checklist across schemes + readiness % |
 | Analytics & charts | ✅ Working | Eligibility donut, value-by-scheme bar, deadline radar, animated counters |
+| **Calendar export (.ics)** | ✅ Working | One click adds all eligible deadlines (with 7-day reminders) to Google/Apple/Outlook |
+| **Print action plan** | ✅ Working | Clean, print-optimised personalised plan (schemes + roadmap + checklist) |
+| **Command palette (Ctrl/⌘ K)** | ✅ Working | Fast keyboard navigation & actions, like pro tools |
 | Personalised roadmap | ✅ Working | Step-by-step; LLM only *enhances* wording when available |
 | Pluggable LLM layer | ✅ Working | `mock` (offline, default) or `ollama` (local, free). Never a paid API |
 | FastAPI backend + SQLite | ✅ Working | Auto-creates a local `lifepilot.db`, zero setup |
@@ -40,6 +43,10 @@ This repository is a **working prototype**: intentionally simple, 100% free & op
 ## Security & privacy (by design)
 
 - **No paid APIs, no license keys, no cloud accounts** required to run.
+- **Hardened HTTP layer:** every response carries a strict **Content-Security-Policy** (with `connect-src 'self'`,
+  so the page can never send your data anywhere except this local backend), plus `X-Frame-Options: DENY`,
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, and a `Permissions-Policy`. A per-IP
+  **rate limiter** protects the API, and **CORS** is restricted to localhost.
 - **Zero certificate/key material anywhere — no `.pem`, `.key`, `.crt`, `.pfx`.**
   We deliberately avoid `httpx`/`requests` (they bundle `certifi`'s `cacert.pem`) and use Python's
   stdlib `urllib` instead. The virtual environment is built **without pip** (`python -m venv --without-pip`)
