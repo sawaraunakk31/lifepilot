@@ -22,6 +22,7 @@
       <div class="landing-mark">LP</div>
       <p class="eyebrow">AI CHIEF OF STAFF FOR CITIZENS</p>
       <h1 class="landing-title">Claim every benefit<br/>you’re <em>entitled to.</em></h1>
+      <div class="landing-rule"></div>
       <p class="landing-sub">LifePilot quietly does the research for you — discovering the scholarships, grants and government schemes you qualify for, and the exact steps to claim them.</p>
       <button id="enterBtn" class="btn btn-primary px-7 py-3.5 text-base flex items-center gap-2">Enter LifePilot <span aria-hidden="true">→</span></button>
       <p class="landing-trust"><b>Free &amp; open-source</b> · Runs on your device · <b>Your data never leaves your machine</b></p>
@@ -34,7 +35,7 @@
   <!-- Hidden SVG gradient for progress rings -->
   <svg width="0" height="0"><defs>
     <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#5eead4" /><stop offset="55%" stop-color="#34d399" /><stop offset="100%" stop-color="#e4b265" />
+      <stop offset="0%" stop-color="#e7c878" /><stop offset="55%" stop-color="#c9a24b" /><stop offset="100%" stop-color="#8c6d2e" />
     </linearGradient>
   </defs></svg>
 
@@ -43,7 +44,7 @@
     <aside class="hidden md:flex flex-col w-64 shrink-0 p-4 gap-2 sticky top-0 h-screen glass border-r">
       <div class="flex items-center gap-3 px-2 py-3">
         <div class="w-10 h-10 rounded-2xl glow flex items-center justify-center font-display font-bold text-lg"
-             style="background:linear-gradient(135deg,#14b8a6,#34d399);color:#04120e">LP</div>
+             style="background:linear-gradient(135deg,#e7c878,#c9a24b);color:#1a1408">LP</div>
         <div>
           <div class="font-display font-bold text-[15px] leading-tight">LifePilot</div>
           <div class="text-[11px] text-[var(--muted)] -mt-0.5">AI Chief of Staff</div>
@@ -112,18 +113,19 @@
             </button>
           </div>
 
-          <div id="dashContent" class="hidden space-y-5">
+          <div id="dashContent" class="hidden space-y-6">
             <!-- Hero -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 stagger">
-              <div class="lg:col-span-2 glass glass-hover rounded-3xl p-6 relative overflow-hidden" data-tilt>
-                <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full" style="background:radial-gradient(circle,rgba(124,92,255,.4),transparent 70%)"></div>
-                <p class="text-xs uppercase tracking-widest text-[var(--muted)] mb-2">Estimated benefits you can unlock</p>
+              <div class="lg:col-span-2 glass glass-hover rounded-2xl p-7 relative overflow-hidden" data-tilt>
+                <div class="absolute -right-16 -top-16 w-52 h-52 rounded-full" style="background:radial-gradient(circle,rgba(201,162,75,.16),transparent 70%)"></div>
+                <p class="eyebrow mb-3">Estimated annual value</p>
                 <div class="flex items-end gap-2">
-                  <span class="font-display text-5xl md:text-6xl font-bold gradient-text" id="heroBenefit">₹0</span>
-                  <span class="text-[var(--muted)] mb-2 text-sm">/ year</span>
+                  <span class="num text-6xl md:text-7xl font-medium gold-text" id="heroBenefit">₹0</span>
+                  <span class="text-[var(--muted)] mb-3 text-sm">/ year</span>
                 </div>
-                <p class="text-sm text-[var(--muted)] mt-2" id="heroSub">across your eligible schemes</p>
-                <div class="flex gap-2 mt-4 flex-wrap">
+                <div class="w-14 h-px my-3" style="background:linear-gradient(90deg,var(--gold),transparent)"></div>
+                <p class="text-sm text-[var(--muted)]" id="heroSub">across your eligible schemes</p>
+                <div class="flex gap-2 mt-5 flex-wrap">
                   <button class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5" data-nav="discover"><i data-lucide="compass" class="w-3.5 h-3.5"></i> View opportunities</button>
                   <button class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5" data-nav="simulator"><i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i> Run a what-if</button>
                   <button id="calBtn" class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5"><i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> Add deadlines to calendar</button>
@@ -131,19 +133,20 @@
                 </div>
               </div>
 
-              <div class="glass glass-hover rounded-3xl p-6 flex items-center gap-5" data-tilt>
-                <div class="relative w-28 h-28 shrink-0">
+              <div class="glass glass-hover rounded-2xl p-6 flex items-center gap-5" data-tilt>
+                <div class="relative w-28 h-28 shrink-0 medallion">
                   <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
-                    <circle cx="60" cy="60" r="52" fill="none" stroke-width="12" class="ring-track" />
-                    <circle id="readyRing" cx="60" cy="60" r="52" fill="none" stroke-width="12" class="ring-value"
+                    <circle cx="60" cy="60" r="52" fill="none" stroke-width="9" class="ring-track" />
+                    <circle id="readyRing" cx="60" cy="60" r="52" fill="none" stroke-width="9" class="ring-value"
                             stroke-dasharray="326.7" stroke-dashoffset="326.7" />
                   </svg>
                   <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span id="readyPct" class="font-display text-2xl font-bold">0%</span>
-                    <span class="text-[10px] text-[var(--muted)]">ready</span>
+                    <span id="readyPct" class="num text-2xl font-semibold">0%</span>
+                    <span class="text-[10px] uppercase tracking-widest text-[var(--muted)]">ready</span>
                   </div>
                 </div>
                 <div>
+                  <p class="eyebrow mb-1.5">Readiness</p>
                   <p class="font-semibold text-sm">Application readiness</p>
                   <p class="text-xs text-[var(--muted)] mt-1" id="readySub">Add your documents to boost this.</p>
                   <button class="btn btn-ghost px-3 py-1.5 text-xs mt-3 flex items-center gap-1.5" data-nav="documents"><i data-lucide="folder-check" class="w-3.5 h-3.5"></i> Manage documents</button>
@@ -152,24 +155,27 @@
             </div>
 
             <!-- Stat tiles -->
+            <div class="section-head"><span class="eyebrow">Overview</span><span class="rule"></span></div>
             <div id="statTiles" class="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger"></div>
 
             <!-- Charts -->
+            <div class="section-head mt-1"><span class="eyebrow">Insights</span><span class="rule"></span></div>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 stagger">
-              <div class="glass rounded-3xl p-5">
+              <div class="glass rounded-2xl p-5">
                 <p class="font-semibold text-sm mb-3">Eligibility mix</p>
                 <div class="h-52 flex items-center justify-center"><canvas id="chartMix"></canvas></div>
               </div>
-              <div class="lg:col-span-2 glass rounded-3xl p-5">
+              <div class="lg:col-span-2 glass rounded-2xl p-5">
                 <p class="font-semibold text-sm mb-3">Value by scheme (₹/yr, eligible)</p>
                 <div class="h-52"><canvas id="chartBenefit"></canvas></div>
               </div>
             </div>
 
             <!-- Top pick + deadlines -->
+            <div class="section-head mt-1"><span class="eyebrow">Priorities</span><span class="rule"></span></div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 stagger">
-              <div id="topPick" class="glass glass-hover rounded-3xl p-6" data-tilt></div>
-              <div class="glass rounded-3xl p-6">
+              <div id="topPick" class="glass glass-hover rounded-2xl p-6" data-tilt></div>
+              <div class="glass rounded-2xl p-6">
                 <p class="font-semibold text-sm mb-3 flex items-center gap-2"><i data-lucide="alarm-clock" class="w-4 h-4 text-[var(--warn)]"></i> Deadline radar</p>
                 <div id="deadlineList" class="space-y-2"></div>
               </div>
@@ -235,7 +241,7 @@
         <section class="view" data-view="assistant">
           <div class="glass rounded-3xl flex flex-col h-[70vh] max-w-3xl mx-auto overflow-hidden">
             <div class="px-5 py-3 border-b flex items-center gap-2" style="border-color:var(--border)">
-              <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#14b8a6,#34d399)"><i data-lucide="sparkles" class="w-4 h-4 text-[#04120e]"></i></div>
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#e7c878,#c9a24b)"><i data-lucide="sparkles" class="w-4 h-4 text-[#1a1408]"></i></div>
               <div><p class="font-semibold text-sm">LifePilot Assistant</p><p class="text-[11px] text-[var(--muted)]">Grounded on your real matches — no made-up schemes</p></div>
             </div>
             <div id="chatLog" class="flex-1 overflow-y-auto p-5 flex flex-col gap-3"></div>
@@ -251,24 +257,41 @@
 
         <!-- ══════════ DOCUMENTS ══════════ -->
         <section class="view" data-view="documents">
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <div class="glass rounded-3xl p-6 flex flex-col items-center text-center h-max">
-              <div class="relative w-32 h-32">
-                <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
-                  <circle cx="60" cy="60" r="52" fill="none" stroke-width="12" class="ring-track" />
-                  <circle id="docRing" cx="60" cy="60" r="52" fill="none" stroke-width="12" class="ring-value" stroke-dasharray="326.7" stroke-dashoffset="326.7" />
-                </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                  <span id="docPct" class="font-display text-3xl font-bold">0%</span><span class="text-[10px] text-[var(--muted)]">ready</span>
+          <!-- Safety guarantee -->
+          <div class="safe-banner p-5 mb-5">
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center" style="background:linear-gradient(135deg,#e7c878,#c9a24b)"><i data-lucide="shield-check" class="w-5 h-5 text-[#1a1408]"></i></div>
+              <div class="flex-1">
+                <p class="eyebrow mb-1">Your documents, your device</p>
+                <p class="font-semibold text-sm">Private by design — files never leave your machine.</p>
+                <div class="grid sm:grid-cols-3 gap-3 mt-4">
+                  <div class="safe-point"><i data-lucide="cloud-off" class="w-4 h-4 mt-0.5 text-[var(--gold-2)]"></i><span><b class="text-[var(--text)]">No upload server.</b> There is literally no endpoint to send files to.</span></div>
+                  <div class="safe-point"><i data-lucide="hard-drive" class="w-4 h-4 mt-0.5 text-[var(--gold-2)]"></i><span><b class="text-[var(--text)]">Stored in your browser</b> only, on this device. Works fully offline.</span></div>
+                  <div class="safe-point"><i data-lucide="trash-2" class="w-4 h-4 mt-0.5 text-[var(--gold-2)]"></i><span><b class="text-[var(--text)]">You stay in control</b> — remove any file, or clear the vault, anytime.</span></div>
                 </div>
               </div>
-              <p class="font-semibold mt-3 text-sm">Document readiness</p>
-              <p id="docCount" class="text-xs text-[var(--muted)] mt-1">0 of 0 collected</p>
-              <p class="text-[11px] text-[var(--muted)] mt-3">Tick documents you already have. This is stored locally on your device only.</p>
             </div>
-            <div class="lg:col-span-2 glass rounded-3xl p-6">
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div class="glass rounded-2xl p-6 flex flex-col items-center text-center h-max">
+              <div class="relative w-32 h-32 medallion">
+                <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
+                  <circle cx="60" cy="60" r="52" fill="none" stroke-width="9" class="ring-track" />
+                  <circle id="docRing" cx="60" cy="60" r="52" fill="none" stroke-width="9" class="ring-value" stroke-dasharray="326.7" stroke-dashoffset="326.7" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span id="docPct" class="num text-3xl font-semibold">0%</span><span class="text-[10px] uppercase tracking-widest text-[var(--muted)]">ready</span>
+                </div>
+              </div>
+              <p class="eyebrow mt-4">Vault</p>
+              <p class="font-semibold mt-1 text-sm">Document readiness</p>
+              <p id="docCount" class="text-xs text-[var(--muted)] mt-1">0 of 0 collected</p>
+              <button id="clearVaultBtn" class="btn btn-ghost px-3 py-1.5 text-xs mt-4 flex items-center gap-1.5"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear vault</button>
+            </div>
+            <div class="lg:col-span-2 glass rounded-2xl p-6">
               <p class="font-semibold text-sm mb-1">Master checklist</p>
-              <p class="text-xs text-[var(--muted)] mb-4">One de-duplicated list across every scheme you qualify for.</p>
+              <p class="text-xs text-[var(--muted)] mb-4">One de-duplicated list across every scheme you qualify for. Tick items you have, or attach a file to store it securely on your device.</p>
               <div id="docList" class="space-y-2"></div>
             </div>
           </div>

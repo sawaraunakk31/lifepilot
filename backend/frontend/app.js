@@ -73,6 +73,8 @@ const state = {
   profile: JSON.parse(localStorage.getItem('lp_profile') || 'null'),
   run: null,
   ownedDocs: new Set(JSON.parse(localStorage.getItem('lp_docs') || '[]')),
+  vaultKeys: new Set(),
+  vaultMeta: {},
   discoverFilter: 'all',
   charts: {},
   baseline: { eligible: 0, benefit: 0 },
@@ -192,7 +194,7 @@ function renderAll() {
 function computeReadiness() {
   const docs = state.run?.insights?.master_documents || [];
   const total = docs.length;
-  const owned = docs.filter((d) => state.ownedDocs.has(d.document.toLowerCase())).length;
+  const owned = docs.filter((d) => { const k = d.document.toLowerCase(); return state.ownedDocs.has(k) || state.vaultKeys.has(k); }).length;
   return { total, owned, pct: total ? Math.round((100 * owned) / total) : 0 };
 }
 
@@ -265,7 +267,7 @@ function renderCharts(ins) {
   state.charts.mix?.destroy();
   state.charts.mix = new Chart($('#chartMix'), {
     type: 'doughnut',
-    data: { labels: ['Eligible', 'Partial'], datasets: [{ data: [ins.eligible_count, ins.partial_count], backgroundColor: ['#34d399', '#e4b265'], borderWidth: 0, hoverOffset: 6 }] },
+    data: { labels: ['Eligible', 'Partial'], datasets: [{ data: [ins.eligible_count, ins.partial_count], backgroundColor: ['#8fc7a6', '#c9a24b'], borderWidth: 0, hoverOffset: 6 }] },
     options: { cutout: '68%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14 } } } },
   });
 
@@ -276,7 +278,7 @@ function renderCharts(ins) {
     type: 'bar',
     data: {
       labels: elig.map((x) => x.t.length > 26 ? x.t.slice(0, 24) + '…' : x.t),
-      datasets: [{ data: elig.map((x) => x.v), backgroundColor: (c) => { const g = c.chart.ctx.createLinearGradient(0, 0, c.chart.width, 0); g.addColorStop(0, '#14b8a6'); g.addColorStop(1, '#34d399'); return g; }, borderRadius: 6, barThickness: 16 }],
+      datasets: [{ data: elig.map((x) => x.v), backgroundColor: (c) => { const g = c.chart.ctx.createLinearGradient(0, 0, c.chart.width, 0); g.addColorStop(0, '#e7c878'); g.addColorStop(1, '#c9a24b'); return g; }, borderRadius: 6, barThickness: 16 }],
     },
     options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,.06)' }, ticks: { callback: (v) => '₹' + (v / 1000) + 'k' } }, y: { grid: { display: false } } } },
   });
@@ -317,7 +319,7 @@ function matchCard(m) {
   const reasons = (m.reasons || []).map((r) => `<li class="flex gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 mt-0.5" style="color:var(--good)"></i><span>${esc(r)}</span></li>`).join('');
   const unmet = (m.unmet || []).map((r) => `<li class="flex gap-1.5"><i data-lucide="dot" class="w-3.5 h-3.5 mt-0.5" style="color:var(--warn)"></i><span>${esc(r)}</span></li>`).join('');
   const docs = (m.documents || []).map((d) => `<li class="flex gap-1.5 text-[var(--muted)]"><i data-lucide="file" class="w-3.5 h-3.5 mt-0.5"></i>${esc(d)}</li>`).join('');
-  const road = (m.roadmap || []).map((s, i) => `<li class="flex gap-2"><span class="w-5 h-5 shrink-0 rounded-full text-[10px] font-bold flex items-center justify-center" style="background:rgba(20,184,166,.2);color:#5eead4">${i + 1}</span><span>${esc(s)}</span></li>`).join('');
+  const road = (m.roadmap || []).map((s, i) => `<li class="flex gap-2"><span class="w-5 h-5 shrink-0 rounded-full text-[10px] font-bold flex items-center justify-center" style="background:rgba(201,162,75,.18);color:#e7c878">${i + 1}</span><span>${esc(s)}</span></li>`).join('');
 
   return `<div class="glass glass-hover rounded-2xl p-5">
     <div class="flex items-start justify-between gap-3">
@@ -326,20 +328,20 @@ function matchCard(m) {
         <p class="text-[11px] text-[var(--muted)] mt-0.5">${esc(m.provider || '')}</p></div>
       <div class="text-right shrink-0"><div class="font-display text-2xl font-bold" style="color:${col}">${Math.round(m.score * 100)}%</div><div class="text-[10px] text-[var(--muted)]">fit</div></div>
     </div>
-    <div class="h-1 rounded-full mt-3 overflow-hidden" style="background:rgba(255,255,255,.07)"><div style="width:${Math.round(m.score * 100)}%;height:100%;background:linear-gradient(90deg,#14b8a6,#34d399)"></div></div>
+    <div class="h-1 rounded-full mt-3 overflow-hidden" style="background:rgba(255,255,255,.06)"><div style="width:${Math.round(m.score * 100)}%;height:100%;background:linear-gradient(90deg,#e7c878,#c9a24b)"></div></div>
     <div class="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-[var(--muted)]"><span>💰 ${esc(m.amount || '—')}</span><span>📅 ${dlTxt}</span></div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 text-xs">
       ${reasons ? `<div><p class="font-semibold mb-1">Why you qualify</p><ul class="space-y-1">${reasons}</ul></div>` : ''}
       ${unmet ? `<div><p class="font-semibold mb-1">Gaps to check</p><ul class="space-y-1">${unmet}</ul></div>` : ''}
     </div>
     <details class="mt-3">
-      <summary class="cursor-pointer text-xs font-semibold flex items-center gap-1" style="color:#5eead4"><i data-lucide="list-checks" class="w-3.5 h-3.5"></i> Documents & roadmap</summary>
+      <summary class="cursor-pointer text-xs font-semibold flex items-center gap-1" style="color:#e7c878"><i data-lucide="list-checks" class="w-3.5 h-3.5"></i> Documents & roadmap</summary>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 text-xs">
         <div><p class="font-semibold mb-1">Documents</p><ul class="space-y-1">${docs}</ul></div>
         <div><p class="font-semibold mb-1">Roadmap</p><ol class="space-y-1.5">${road}</ol></div>
       </div>
     </details>
-    ${m.url ? `<a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-3 text-xs font-semibold" style="color:#5eead4">Open official portal <i data-lucide="external-link" class="w-3 h-3"></i></a>` : ''}
+    ${m.url ? `<a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-3 text-xs font-semibold" style="color:#e7c878">Open official portal <i data-lucide="external-link" class="w-3 h-3"></i></a>` : ''}
   </div>`;
 }
 
@@ -416,33 +418,118 @@ $('#chatForm')?.addEventListener('submit', async (e) => {
   $('#chatLog').scrollTop = $('#chatLog').scrollHeight;
 });
 
-// ───────── DOCUMENTS ─────────
-function renderDocuments() {
-  const list = $('#docList');
-  const docs = state.run?.insights?.master_documents || [];
-  if (!docs.length) { list.innerHTML = '<p class="text-xs text-[var(--muted)]">Run LifePilot from your profile to build a checklist.</p>'; updateDocRing(); return; }
-  list.innerHTML = docs.map((d) => {
-    const key = d.document.toLowerCase(); const owned = state.ownedDocs.has(key);
-    return `<label class="flex items-center gap-3 glass rounded-xl px-3 py-2.5 cursor-pointer glass-hover">
-      <input type="checkbox" class="accent-[#14b8a6] w-4 h-4" data-doc="${esc(key)}" ${owned ? 'checked' : ''} />
-      <div class="flex-1 min-w-0"><p class="text-sm ${owned ? 'line-through text-[var(--muted)]' : ''}">${esc(d.document)}</p>
-      <p class="text-[11px] text-[var(--muted)]">Needed by ${d.used_by} scheme${d.used_by === 1 ? '' : 's'}</p></div>
-      ${owned ? '<i data-lucide="check-circle-2" class="w-4 h-4" style="color:var(--good)"></i>' : ''}
-    </label>`;
-  }).join('');
-  $$('[data-doc]', list).forEach((cb) => cb.addEventListener('change', () => {
-    cb.checked ? state.ownedDocs.add(cb.dataset.doc) : state.ownedDocs.delete(cb.dataset.doc);
-    saveDocs(); renderDocuments(); updateDocRing();
-    const rd = computeReadiness(); setRing($('#readyRing'), $('#readyPct'), rd.pct); $('#readySub').textContent = `${rd.owned} of ${rd.total} documents ready`;
-  }));
-  updateDocRing();
-  icons();
+// ───────── DOCUMENTS + local vault (IndexedDB — nothing is uploaded) ─────────
+const VDB = 'lifepilot-vault', VSTORE = 'files';
+function vaultDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(VDB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(VSTORE);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
 }
-function updateDocRing() {
+async function vaultPut(key, file) {
+  const db = await vaultDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(VSTORE, 'readwrite');
+    tx.objectStore(VSTORE).put({ name: file.name, type: file.type, size: file.size, blob: file, addedAt: Date.now() }, key);
+    tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error);
+  });
+}
+async function vaultGet(key) {
+  const db = await vaultDB();
+  return new Promise((res) => { const rq = db.transaction(VSTORE).objectStore(VSTORE).get(key); rq.onsuccess = () => res(rq.result); rq.onerror = () => res(null); });
+}
+async function vaultList() {
+  const db = await vaultDB();
+  return new Promise((res) => {
+    const out = []; const rq = db.transaction(VSTORE).objectStore(VSTORE).openCursor();
+    rq.onsuccess = () => { const c = rq.result; if (c) { out.push({ key: c.key, name: c.value.name, size: c.value.size }); c.continue(); } else res(out); };
+    rq.onerror = () => res(out);
+  });
+}
+async function vaultDelete(key) { const db = await vaultDB(); return new Promise((res) => { const tx = db.transaction(VSTORE, 'readwrite'); tx.objectStore(VSTORE).delete(key); tx.oncomplete = () => res(); tx.onerror = () => res(); }); }
+async function vaultClear() { const db = await vaultDB(); return new Promise((res) => { const tx = db.transaction(VSTORE, 'readwrite'); tx.objectStore(VSTORE).clear(); tx.oncomplete = () => res(); tx.onerror = () => res(); }); }
+
+async function loadVault() {
+  try {
+    const items = await vaultList();
+    state.vaultKeys = new Set(items.map((i) => i.key));
+    state.vaultMeta = Object.fromEntries(items.map((i) => [i.key, { name: i.name, size: i.size }]));
+  } catch { /* IndexedDB unavailable — vault simply stays empty */ }
+}
+
+function refreshReadiness() {
   const rd = computeReadiness();
   setRing($('#docRing'), $('#docPct'), rd.pct);
   $('#docCount').textContent = `${rd.owned} of ${rd.total} collected`;
+  setRing($('#readyRing'), $('#readyPct'), rd.pct);
+  $('#readySub').textContent = `${rd.owned} of ${rd.total} documents ready`;
 }
+
+function renderDocuments() {
+  const list = $('#docList');
+  const docs = state.run?.insights?.master_documents || [];
+  if (!docs.length) { list.innerHTML = '<p class="text-xs text-[var(--muted)]">Run LifePilot from your profile to build a checklist.</p>'; refreshReadiness(); return; }
+  list.innerHTML = docs.map((d) => {
+    const key = d.document.toLowerCase();
+    const owned = state.ownedDocs.has(key);
+    const file = state.vaultMeta[key];
+    const secured = state.vaultKeys.has(key);
+    return `<div class="glass rounded-xl px-3 py-2.5 glass-hover">
+      <div class="flex items-center gap-3">
+        <input type="checkbox" class="accent-[#c9a24b] w-4 h-4" data-doc="${esc(key)}" ${owned || secured ? 'checked' : ''} />
+        <div class="flex-1 min-w-0"><p class="text-sm ${owned || secured ? 'text-[var(--muted)]' : ''}">${esc(d.document)}</p>
+          <p class="text-[11px] text-[var(--muted)]">Needed by ${d.used_by} scheme${d.used_by === 1 ? '' : 's'}</p></div>
+        ${secured ? '<span class="chip badge-good"><i data-lucide="lock" class="w-3 h-3"></i> Secured</span>' : ''}
+        <label class="btn btn-ghost px-2.5 py-1 text-xs cursor-pointer flex items-center gap-1 shrink-0">
+          <i data-lucide="paperclip" class="w-3.5 h-3.5"></i> ${secured ? 'Replace' : 'Attach'}
+          <input type="file" class="hidden" data-upload="${esc(key)}" accept=".pdf,.png,.jpg,.jpeg,.webp" />
+        </label>
+      </div>
+      ${file ? `<div class="vault-item mt-2 text-xs">
+        <i data-lucide="file-text" class="w-4 h-4 text-[var(--gold-2)] shrink-0"></i>
+        <div class="flex-1 min-w-0"><p class="truncate">${esc(file.name)}</p><p class="text-[11px] text-[var(--muted)]">${(file.size/1024).toFixed(0)} KB · stored on this device only</p></div>
+        <button data-open="${esc(key)}" class="font-semibold" style="color:var(--gold-2)">Open</button>
+        <button data-remove="${esc(key)}" class="font-semibold" style="color:var(--bad)">Remove</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  $$('[data-doc]', list).forEach((cb) => cb.addEventListener('change', () => {
+    cb.checked ? state.ownedDocs.add(cb.dataset.doc) : state.ownedDocs.delete(cb.dataset.doc);
+    saveDocs(); renderDocuments(); refreshReadiness();
+  }));
+  $$('[data-upload]', list).forEach((inp) => inp.addEventListener('change', async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    if (f.size > 8 * 1024 * 1024) { toast('File too large (max 8 MB)', 'warn'); return; }
+    const key = inp.dataset.upload;
+    try {
+      await vaultPut(key, f);
+      state.vaultKeys.add(key); state.vaultMeta[key] = { name: f.name, size: f.size };
+      state.ownedDocs.add(key); saveDocs();
+      toast('Stored securely on your device — never uploaded', 'good');
+      renderDocuments(); refreshReadiness();
+    } catch { toast('Could not store the file locally', 'bad'); }
+  }));
+  $$('[data-open]', list).forEach((b) => b.addEventListener('click', async () => {
+    const rec = await vaultGet(b.dataset.open); if (!rec) return;
+    const url = URL.createObjectURL(rec.blob); window.open(url, '_blank', 'noopener');
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }));
+  $$('[data-remove]', list).forEach((b) => b.addEventListener('click', async () => {
+    const key = b.dataset.remove;
+    await vaultDelete(key); state.vaultKeys.delete(key); delete state.vaultMeta[key];
+    toast('Removed from your device', 'info'); renderDocuments(); refreshReadiness();
+  }));
+  refreshReadiness();
+  icons();
+}
+
+$('#clearVaultBtn')?.addEventListener('click', async () => {
+  await vaultClear(); state.vaultKeys.clear(); state.vaultMeta = {};
+  toast('Vault cleared from this device', 'info'); renderDocuments(); refreshReadiness();
+});
 
 // ───────── ACTIVITY ─────────
 const AGENT_ICON = { PlannerAgent: 'route', ResearchAgent: 'telescope', EligibilityAgent: 'scale', DocumentAgent: 'folder-check', TrackingAgent: 'alarm-clock', RoadmapAgent: 'map', InsightAgent: 'sparkles' };
@@ -453,11 +540,11 @@ function renderActivity() {
     state.run.logs.map((l) => {
       const conf = Math.round((l.confidence || 0) * 100);
       return `<div class="relative">
-        <div class="absolute -left-[22px] top-1 w-5 h-5 rounded-full glass flex items-center justify-center"><i data-lucide="${AGENT_ICON[l.agent] || 'bot'}" class="w-3 h-3" style="color:#5eead4"></i></div>
+        <div class="absolute -left-[22px] top-1 w-5 h-5 rounded-full glass flex items-center justify-center"><i data-lucide="${AGENT_ICON[l.agent] || 'bot'}" class="w-3 h-3" style="color:#e7c878"></i></div>
         <div class="glass rounded-xl p-3">
           <div class="flex items-center justify-between"><span class="text-xs font-bold">${esc(l.agent)}</span><span class="text-[11px] text-[var(--muted)]">${conf}%</span></div>
           <p class="text-xs text-[var(--muted)] mt-1">${esc(l.message)}</p>
-          <div class="h-1 rounded-full mt-2 overflow-hidden" style="background:rgba(255,255,255,.07)"><div style="width:${conf}%;height:100%;background:linear-gradient(90deg,#14b8a6,#34d399)"></div></div>
+          <div class="h-1 rounded-full mt-2 overflow-hidden" style="background:rgba(255,255,255,.06)"><div style="width:${conf}%;height:100%;background:linear-gradient(90deg,#e7c878,#c9a24b)"></div></div>
         </div></div>`;
     }).join('');
   icons();
@@ -467,7 +554,7 @@ function renderActivity() {
 function fireConfetti() {
   const c = document.createElement('canvas'); c.id = 'confetti'; document.body.appendChild(c);
   const ctx = c.getContext('2d'); const W = c.width = innerWidth, H = c.height = innerHeight;
-  const colors = ['#14b8a6', '#34d399', '#5eead4', '#e4b265', '#6ee7b7'];
+  const colors = ['#e7c878', '#c9a24b', '#f0e0b0', '#8fc7a6', '#8c6d2e'];
   const parts = Array.from({ length: 150 }, (_, i) => ({
     x: W / 2 + (Math.random() - .5) * 260, y: H * 0.28,
     vx: (Math.random() - .5) * 11, vy: Math.random() * -9 - 4,
@@ -618,6 +705,7 @@ async function boot() {
   renderSuggestions();
   updateSliderFill();
   setupMagnetic();
+  await loadVault();
   checkHealth();
   if (state.profileId) {
     showOverlay();
