@@ -1,4 +1,4 @@
-"""Agent run endpoints - triggers the multi-agent pipeline and stores results."""
+"""Agent run endpoints — triggers the multi-agent pipeline and serves results."""
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -27,13 +27,30 @@ def run_agents(profile_id: int, db: Session = Depends(get_db)):
 
     run = models.AgentRun(profile_id=profile.id, status="completed", summary=result["summary"])
     db.add(run)
-    db.flush()  # get run.id
+    db.flush()
 
     for log in result["logs"]:
-        db.add(models.AgentLog(run_id=run.id, **log))
+        db.add(models.AgentLog(run_id=run.id, agent=log["agent"],
+                                message=log["message"],
+                                confidence=log.get("confidence")))
 
     for m in result["matches"]:
-        db.add(models.MatchResult(run_id=run.id, **m))
+        db.add(models.MatchResult(
+            run_id=run.id,
+            opportunity_id=m.get("opportunity_id", ""),
+            title=m.get("title", ""),
+            provider=m.get("provider"),
+            url=m.get("url"),
+            amount=m.get("amount"),
+            deadline=m.get("deadline"),
+            eligible=m.get("eligible", False),
+            score=m.get("score", 0.0),
+            confidence=m.get("confidence", 0.0),
+            reasons=m.get("reasons", []),
+            unmet=m.get("unmet", []),
+            documents=m.get("documents", []),
+            roadmap=m.get("roadmap", []),
+        ))
 
     db.commit()
     db.refresh(run)
@@ -45,11 +62,11 @@ def run_agents(profile_id: int, db: Session = Depends(get_db)):
 
 @router.post("/simulate", response_model=schemas.SimulateResponse)
 def simulate(payload: schemas.SimulateRequest):
-    """What-if simulator: evaluate an arbitrary profile WITHOUT saving anything."""
+    """What-if simulator: evaluate an arbitrary profile WITHOUT saving."""
     data = payload.model_dump()
     owned = data.pop("owned_documents", [])
     profile = SimpleNamespace(**data, owned_documents=owned)
-    result = Orchestrator().run(profile)
+    result = Orchestrator().run(profile, owned_documents=owned)
     return schemas.SimulateResponse(
         summary=result["summary"],
         logs=result["logs"],
@@ -63,8 +80,20 @@ def assistant(payload: schemas.AssistantRequest, db: Session = Depends(get_db)):
     profile = db.get(models.Profile, payload.profile_id)
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
+
     result = Orchestrator().run(profile)
-    reply = assistant_service.answer(payload.question, result["matches"], profile.name)
+    profile_dict = {
+        "name": profile.name, "category": profile.category,
+        "state": profile.state, "education_level": profile.education_level,
+        "annual_income": profile.annual_income,
+    }
+    reply = assistant_service.answer(
+        question=payload.question,
+        matches=result["matches"],
+        name=profile.name,
+        profile_id=profile.id,
+        profile=profile_dict,
+    )
     return schemas.AssistantResponse(**reply)
 
 

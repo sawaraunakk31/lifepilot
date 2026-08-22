@@ -6,6 +6,21 @@ pydantic==2.10.4
 pydantic-settings==2.7.1
 python-dotenv==1.0.1
 python-multipart==0.0.20
-# NOTE: no HTTP client dependency (httpx/requests) on purpose — those pull in
-# `certifi` which ships a cacert.pem bundle. We use Python's stdlib urllib for
-# the optional localhost Ollama call, so NO .pem/certificate files are installed.
+
+# LLM API clients (free tiers)
+# Using native httpx instead of SDKs for speed & minimal dependencies
+httpx==0.28.1
+
+# Web scraping
+beautifulsoup4==4.12.3
+lxml==5.3.0
+
+# Vector database & embeddings
+chromadb==0.6.3
+
+# Testing
+pytest==8.3.4
+
+# LangGraph and AI
+langchain-core==0.3.33
+langgraph==0.2.70

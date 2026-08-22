@@ -21,3 +21,6 @@ venv/
 Thumbs.db
 .idea/
 .vscode/
+
+# ChromaDB local data
+backend/chroma_data/
