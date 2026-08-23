@@ -1,50 +1,26 @@
-# Python
+# Byte-compiled / venv / db
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Environment
-.env
-.venv
+.venv/
 venv/
-ENV/
-env.bak/
-venv.bak/
-conda_env/
-
-# Databases
 *.db
 *.sqlite3
-*.s3db
-*.db-shm
-*.db-wal
 
-# IDE / OS
-.vscode/
-.idea/
+# Env
+.env
+
+# Security: never track certificate/key material
+*.pem
+*.key
+*.crt
+*.cer
+*.pfx
+
+# OS / editor
 .DS_Store
-*.swp
-*.swo
+Thumbs.db
+.idea/
+.vscode/
 
-# Project specific
-backend/lifepilot.db
+# ChromaDB local data
+backend/chroma_data/
