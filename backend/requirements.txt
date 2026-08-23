@@ -11,9 +11,10 @@ python-multipart==0.0.20
 # Using native httpx instead of SDKs for speed & minimal dependencies
 httpx==0.28.1
 
-# Web scraping
+# Web scraping & PDF
 beautifulsoup4==4.12.3
 lxml==5.3.0
+pypdf==6.16.1
 
 # Vector database & embeddings
 chromadb==0.6.3

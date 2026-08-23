@@ -63,7 +63,7 @@
       <div class="mt-auto flex flex-col gap-2">
         <div class="nav-item" data-nav="profile"><i data-lucide="user-round-cog" class="w-[18px] h-[18px]"></i> Profile & Settings</div>
         <div id="health" class="glass rounded-xl px-3 py-2 text-[11px] text-[var(--muted)] flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-slate-500 pulse"></span> connecting…
+          <span class="w-2 h-2 rounded-full bg-[#c9a24b] pulse"></span> connecting…
         </div>
       </div>
     </aside>
@@ -114,70 +114,92 @@
           </div>
 
           <div id="dashContent" class="hidden space-y-6">
-            <!-- Hero -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 stagger">
-              <div class="lg:col-span-2 glass glass-hover rounded-2xl p-7 relative overflow-hidden" data-tilt>
-                <div class="absolute -right-16 -top-16 w-52 h-52 rounded-full" style="background:radial-gradient(circle,rgba(201,162,75,.16),transparent 70%)"></div>
-                <p class="eyebrow mb-3">Estimated annual value</p>
-                <div class="flex items-end gap-2">
-                  <span class="num text-6xl md:text-7xl font-medium gold-text" id="heroBenefit">₹0</span>
-                  <span class="text-[var(--muted)] mb-3 text-sm">/ year</span>
+            <!-- Top Summary Row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 stagger">
+              <!-- Readiness Card -->
+              <div class="glass glass-hover rounded-2xl p-6 flex flex-col justify-between" data-tilt>
+                <div>
+                  <p class="font-semibold text-sm">Application Readiness</p>
+                  <p class="text-xs text-[var(--muted)] mt-1" id="readySub">Add your documents to boost this.</p>
                 </div>
-                <div class="w-14 h-px my-3" style="background:linear-gradient(90deg,var(--gold),transparent)"></div>
-                <p class="text-sm text-[var(--muted)]" id="heroSub">across your eligible schemes</p>
-                <div class="flex gap-2 mt-5 flex-wrap">
-                  <button class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5" data-nav="discover"><i data-lucide="compass" class="w-3.5 h-3.5"></i> View opportunities</button>
-                  <button class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5" data-nav="simulator"><i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i> Run a what-if</button>
-                  <button id="calBtn" class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5"><i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> Add deadlines to calendar</button>
-                  <button id="printBtn" class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5"><i data-lucide="printer" class="w-3.5 h-3.5"></i> Print action plan</button>
+                <div class="flex items-center gap-5 mt-5">
+                  <div class="relative w-24 h-24 shrink-0 medallion">
+                    <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
+                      <circle cx="60" cy="60" r="52" fill="none" stroke-width="9" class="ring-track" />
+                      <circle id="readyRing" cx="60" cy="60" r="52" fill="none" stroke-width="9" class="ring-value" stroke-dasharray="326.7" stroke-dashoffset="326.7" />
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                      <span id="readyPct" class="num text-2xl font-bold">0%</span>
+                    </div>
+                  </div>
+                  <button class="btn btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5" data-nav="documents"><i data-lucide="folder-check" class="w-3.5 h-3.5"></i> Vault</button>
                 </div>
               </div>
 
-              <div class="glass glass-hover rounded-2xl p-6 flex items-center gap-5" data-tilt>
-                <div class="relative w-28 h-28 shrink-0 medallion">
-                  <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
-                    <circle cx="60" cy="60" r="52" fill="none" stroke-width="9" class="ring-track" />
-                    <circle id="readyRing" cx="60" cy="60" r="52" fill="none" stroke-width="9" class="ring-value"
-                            stroke-dasharray="326.7" stroke-dashoffset="326.7" />
-                  </svg>
-                  <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span id="readyPct" class="num text-2xl font-semibold">0%</span>
-                    <span class="text-[10px] uppercase tracking-widest text-[var(--muted)]">ready</span>
-                  </div>
-                </div>
+              <!-- Estimated Value Card -->
+              <div class="glass glass-hover rounded-2xl p-6 flex flex-col justify-between" data-tilt>
                 <div>
-                  <p class="eyebrow mb-1.5">Readiness</p>
-                  <p class="font-semibold text-sm">Application readiness</p>
-                  <p class="text-xs text-[var(--muted)] mt-1" id="readySub">Add your documents to boost this.</p>
-                  <button class="btn btn-ghost px-3 py-1.5 text-xs mt-3 flex items-center gap-1.5" data-nav="documents"><i data-lucide="folder-check" class="w-3.5 h-3.5"></i> Manage documents</button>
+                  <p class="font-semibold text-sm">Estimated Annual Value</p>
+                  <p class="text-xs text-[var(--muted)] mt-1" id="heroSub">across your eligible schemes</p>
+                </div>
+                <div class="mt-4">
+                  <span class="num text-5xl font-bold gold-text" id="heroBenefit">₹0</span>
+                </div>
+                <div class="w-full h-1 mt-4 rounded-full bg-[rgba(0,0,0,0.05)] overflow-hidden">
+                   <div class="h-full w-3/4 rounded-full" style="background: linear-gradient(90deg, var(--gold-2), var(--gold-deep))"></div>
+                </div>
+              </div>
+
+              <!-- AI Insights Sidebar -->
+              <div class="glass glass-hover rounded-2xl p-6 border-[var(--line-gold)]" style="background: linear-gradient(145deg, #ffffff, #fcfcfc)" data-tilt>
+                <div class="flex items-center gap-2 mb-4">
+                  <i data-lucide="lightbulb" class="w-5 h-5 text-[var(--gold)]"></i>
+                  <p class="font-semibold text-sm text-[var(--gold-deep)]">AI Insights & Actions</p>
+                </div>
+                <div class="space-y-4 text-sm relative">
+                  <div class="pl-4 border-l-2" style="border-color: var(--gold-2)">
+                    <p class="font-semibold text-[var(--text)]">Optimization Tip</p>
+                    <p class="text-xs text-[var(--muted)] mt-0.5">Uploading your Income Certificate unlocks 3 more grants.</p>
+                  </div>
+                  <div class="pl-4 border-l-2" style="border-color: var(--line-soft)">
+                    <p class="font-semibold text-[var(--text)]">New Discovery</p>
+                    <p class="text-xs text-[var(--muted)] mt-0.5">We found 2 new job openings matching your field.</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Stat tiles -->
+            <!-- Dynamic Stat Tiles -->
             <div class="section-head"><span class="eyebrow">Overview</span><span class="rule"></span></div>
             <div id="statTiles" class="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger"></div>
 
-            <!-- Charts -->
-            <div class="section-head mt-1"><span class="eyebrow">Insights</span><span class="rule"></span></div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 stagger">
-              <div class="glass rounded-2xl p-5">
-                <p class="font-semibold text-sm mb-3">Eligibility mix</p>
-                <div class="h-52 flex items-center justify-center"><canvas id="chartMix"></canvas></div>
-              </div>
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 stagger mt-5">
               <div class="lg:col-span-2 glass rounded-2xl p-5">
-                <p class="font-semibold text-sm mb-3">Value by scheme (₹/yr, eligible)</p>
-                <div class="h-52"><canvas id="chartBenefit"></canvas></div>
+                <div class="flex items-center justify-between mb-3">
+                  <p class="font-semibold text-sm">Value by Category</p>
+                  <div class="flex gap-2">
+                    <span class="flex items-center gap-1 text-[10px] text-[var(--muted)]"><span class="w-2 h-2 rounded-full bg-[var(--gold)]"></span> Grants</span>
+                    <span class="flex items-center gap-1 text-[10px] text-[var(--muted)]"><span class="w-2 h-2 rounded-full bg-[var(--good)]"></span> Jobs</span>
+                  </div>
+                </div>
+                <div class="h-56"><canvas id="chartBenefit"></canvas></div>
+              </div>
+              <div class="glass rounded-2xl p-5">
+                <p class="font-semibold text-sm mb-3">Opportunity Mix</p>
+                <div class="h-56 flex items-center justify-center"><canvas id="chartMix"></canvas></div>
               </div>
             </div>
 
-            <!-- Top pick + deadlines -->
-            <div class="section-head mt-1"><span class="eyebrow">Priorities</span><span class="rule"></span></div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 stagger">
-              <div id="topPick" class="glass glass-hover rounded-2xl p-6" data-tilt></div>
+            <!-- Priorities & Activity -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 stagger mt-5">
+              <div class="glass glass-hover rounded-2xl p-6" data-tilt>
+                <p class="font-semibold text-sm mb-4">Top Priority</p>
+                <div id="topPick"></div>
+              </div>
               <div class="glass rounded-2xl p-6">
-                <p class="font-semibold text-sm mb-3 flex items-center gap-2"><i data-lucide="alarm-clock" class="w-4 h-4 text-[var(--warn)]"></i> Deadline radar</p>
-                <div id="deadlineList" class="space-y-2"></div>
+                <p class="font-semibold text-sm mb-4 flex items-center gap-2"><i data-lucide="alarm-clock" class="w-4 h-4 text-[var(--warn)]"></i> Deadline Radar</p>
+                <div id="deadlineList" class="space-y-3"></div>
               </div>
             </div>
           </div>
@@ -224,7 +246,7 @@
                 <div><label class="text-xs text-[var(--muted)]">State</label><input id="simState" class="field mt-1" value="Karnataka" /></div>
                 <div><label class="text-xs text-[var(--muted)]">Field</label><input id="simField" class="field mt-1" value="Engineering" /></div>
               </div>
-              <label class="flex items-center gap-2 text-sm text-[var(--muted)]"><input id="simDisability" type="checkbox" class="accent-[#7c5cff]" /> Person with disability</label>
+              <label class="flex items-center gap-2 text-sm text-[var(--muted)]"><input id="simDisability" type="checkbox" class="accent-[#c9a24b]" /> Person with disability</label>
             </div>
             <div class="lg:col-span-3 space-y-4">
               <div class="grid grid-cols-3 gap-4">
@@ -320,7 +342,7 @@
               <div><label class="text-xs text-[var(--muted)]">Education level</label><select name="education_level" class="field mt-1"><option value="">—</option><option>9th</option><option>10th</option><option>11th</option><option>12th</option><option>Diploma</option><option>Undergraduate</option><option>Postgraduate</option></select></div>
               <div><label class="text-xs text-[var(--muted)]">Field of study</label><input name="field_of_study" class="field mt-1" placeholder="Engineering" /></div>
               <div class="sm:col-span-2"><label class="text-xs text-[var(--muted)]">Annual family income (₹)</label><input name="annual_income" type="number" min="0" class="field mt-1" placeholder="300000" /></div>
-              <label class="sm:col-span-2 flex items-center gap-2 text-sm text-[var(--muted)]"><input name="disability" type="checkbox" class="accent-[#7c5cff]" /> Person with disability (40%+)</label>
+              <label class="sm:col-span-2 flex items-center gap-2 text-sm text-[var(--muted)]"><input name="disability" type="checkbox" class="accent-[#c9a24b]" /> Person with disability (40%+)</label>
               <div class="sm:col-span-2"><label class="text-xs text-[var(--muted)]">Goals (optional)</label><textarea name="goals" rows="2" class="field mt-1" placeholder="e.g. finish B.Tech, start a company"></textarea></div>
               <div class="sm:col-span-2 flex gap-3 mt-2">
                 <button type="submit" class="btn btn-primary px-5 py-3 flex-1 flex items-center justify-center gap-2"><i data-lucide="rocket" class="w-4 h-4"></i> Save & run LifePilot</button>
@@ -349,7 +371,7 @@
   <div id="printArea"></div>
 
   <!-- Loading overlay -->
-  <div id="overlay" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(7,8,13,.72);backdrop-filter:blur(6px)">
+  <div id="overlay" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(255,255,255,.72);backdrop-filter:blur(6px)">
     <div class="glass rounded-3xl px-8 py-7 text-center max-w-sm">
       <div class="spinner mx-auto mb-4"></div>
       <p class="font-display font-semibold" id="overlayTitle">Agents at work…</p>

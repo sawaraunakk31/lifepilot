@@ -25,6 +25,11 @@ class ProfileCreate(ProfileBase):
     pass
 
 
+class ParseResumeResponse(ProfileBase):
+    """Extracted profile details from a resume."""
+    pass
+
+
 class ProfileOut(ProfileBase):
     model_config = ConfigDict(from_attributes=True)
     id: int

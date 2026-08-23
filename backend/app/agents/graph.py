@@ -63,6 +63,12 @@ def plan_search(state: AgentGraphState):
     if profile.get("category"):
         queries.append(f"{profile['category']} category scholarships India")
         
+    # Add Job search if they are old enough or looking for work
+    if profile.get("age") and profile["age"] >= 18:
+        kw = profile.get("field_of_study", "fresher")
+        queries.append(f"government jobs for {kw} in India")
+        queries.append(f"latest remote jobs for {kw}")
+        
     state["search_queries"] = queries
     state["logs"] = state.get("logs", []) + [{"agent": "Planner (Graph)", "message": f"Generated {len(queries)} search queries."}]
     return state
@@ -150,8 +156,29 @@ def extract_opportunities(state: AgentGraphState):
                 "source": "web"
             })
             
+    # ------ NEW: Trigger the powerful scrape_portals we built earlier ------
+    try:
+        from app.scraper.engine import scrape_portals
+        profile = state.get("profile", {})
+        # Decide keywords based on profile
+        kw = ["scholarship", "grant"]
+        if profile.get("field_of_study"):
+            kw.append(profile["field_of_study"])
+            
+        portal_urls = [
+            "https://www.myscheme.gov.in",
+            f"https://rss.indeed.com/rss?q={' '.join(kw)}"
+        ]
+        
+        scraped = scrape_portals(portal_urls, keywords=kw)
+        opps.extend(scraped)
+        state["logs"].append({"agent": "Scraper (Graph)", "message": f"Directly scraped {len(scraped)} opportunities from target portals."})
+    except Exception as e:
+        logger.error(f"Failed to run scrape_portals: {e}")
+        state.setdefault("errors", []).append(f"Portal Scraping Error: {e}")
+        
     state["opportunities"] = opps
-    state["logs"].append({"agent": "Evaluator (Graph)", "message": f"Extracted {len(opps)} structured opportunities."})
+    state["logs"].append({"agent": "Evaluator (Graph)", "message": f"Extracted {len(opps)} total structured opportunities."})
     return state
 
 
