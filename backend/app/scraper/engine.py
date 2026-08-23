@@ -98,6 +98,66 @@ def _scrape_karnataka_ssp(url: str) -> list[dict]:
         return []
 
 
+@_register("myscheme.gov.in")
+def _scrape_myscheme(url: str) -> list[dict]:
+    """Scrape MyScheme portal (uses dynamic generic scraping + API fallback concepts)."""
+    try:
+        with httpx.Client(timeout=15.0, follow_redirects=True, headers=_HEADERS) as client:
+            # MyScheme is highly dynamic (React/Next), so we fallback to generic scraping if API is hidden
+            resp = client.get(url)
+            if resp.status_code != 200:
+                return []
+            soup = BeautifulSoup(resp.text, "lxml")
+            schemes = []
+            for item in soup.select("h2, h3, a.scheme-card, .text-xl"):
+                text = item.get_text(strip=True)
+                if "scheme" in text.lower() or "yojana" in text.lower():
+                    schemes.append({
+                        "id": f"myscheme-{hashlib.md5(text.encode()).hexdigest()[:8]}",
+                        "title": text,
+                        "provider": "Government of India",
+                        "url": url,
+                        "source": "scraped",
+                        "category": "scheme",
+                    })
+            return schemes[:15]
+    except Exception as e:
+        logger.warning(f"MyScheme scrape failed: {e}")
+        return []
+
+
+def _scrape_rss_jobs(url: str) -> list[dict]:
+    """Scrape Job Portals via standard RSS/XML feeds (Upwork, Indeed, LinkedIn standard feeds)."""
+    try:
+        with httpx.Client(timeout=15.0, follow_redirects=True, headers=_HEADERS) as client:
+            resp = client.get(url)
+            if resp.status_code != 200:
+                return []
+            # Parse as XML using BeautifulSoup
+            soup = BeautifulSoup(resp.content, "xml")
+            jobs = []
+            # RSS items
+            for item in soup.find_all("item"):
+                title = item.find("title")
+                link = item.find("link")
+                desc = item.find("description")
+                if title and link:
+                    title_text = title.get_text(strip=True)
+                    jobs.append({
+                        "id": f"job-rss-{hashlib.md5(title_text.encode()).hexdigest()[:8]}",
+                        "title": title_text,
+                        "provider": "Job Portal",
+                        "url": link.get_text(strip=True),
+                        "description": desc.get_text(strip=True)[:200] if desc else "",
+                        "source": "scraped_rss",
+                        "category": "job",
+                    })
+            return jobs[:20]
+    except Exception as e:
+        logger.warning(f"Job RSS scrape failed for {url}: {e}")
+        return []
+
+
 def _scrape_generic(url: str) -> list[dict]:
     """Generic scraper for any government portal — extracts scheme-like content."""
     try:
@@ -150,13 +210,25 @@ def scrape_portals(portals: list[str], keywords: list[str] | None = None) -> lis
         domain = portal.replace("https://", "").replace("http://", "").split("/")[0]
 
         # Use specific scraper if available, else generic
-        scraper = _PORTAL_SCRAPERS.get(domain, _scrape_generic)
+        # Check if it's an RSS feed (ends with .xml or /rss)
+        if url.endswith(".xml") or "/rss" in url.lower():
+            scraper = _scrape_rss_jobs
+        else:
+            scraper = _PORTAL_SCRAPERS.get(domain, _scrape_generic)
+            
         try:
             results = scraper(url)
             all_results.extend(results)
             logger.info(f"Scraped {len(results)} items from {domain}")
         except Exception as e:
             logger.warning(f"Failed to scrape {domain}: {e}")
+
+    # BACKUP SYSTEM: If no results found, fallback to Serper API search
+    if not all_results and keywords:
+        logger.info("Scraping returned 0 results. Activating Serper API Fallback.")
+        fallback_query = " ".join(keywords)
+        fallback_results = web_search(fallback_query)
+        all_results.extend(fallback_results)
 
     return all_results
 
