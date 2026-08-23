@@ -87,7 +87,7 @@ app.include_router(opportunities.router)
 app.include_router(agent.router)
 
 # ---- Static frontend (built-in single-page UI) ----
-FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 if FRONTEND_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
