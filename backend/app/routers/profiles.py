@@ -7,20 +7,72 @@ from sqlalchemy.orm import Session
 import pypdf
 import json
 
+from typing import Optional
 from app.database import get_db
 from app import models, schemas
 from app.llm.provider import get_provider
+from app.auth import get_current_user
 
 router = APIRouter(prefix="/api/profiles", tags=["profiles"])
 
 
 @router.post("", response_model=schemas.ProfileOut, status_code=201)
-def create_profile(payload: schemas.ProfileCreate, db: Session = Depends(get_db)):
-    profile = models.Profile(**payload.model_dump())
-    db.add(profile)
-    db.commit()
-    db.refresh(profile)
-    return profile
+def create_profile(
+    payload: schemas.ProfileCreate,
+    db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user),
+):
+    data = payload.model_dump()
+    user_id = current_user.get("id") if current_user else None
+    email = current_user.get("email") if current_user else None
+
+    if user_id:
+        data["user_id"] = user_id
+        if not data.get("email") and email:
+            data["email"] = email
+
+    # Check if an existing profile already exists for this user to UPDATE it in Neon DB
+    existing = None
+    if user_id:
+        from sqlalchemy import or_
+        filters = [models.Profile.user_id == user_id]
+        if email:
+            filters.append(models.Profile.email == email)
+        raw_name = data.get("name") or (current_user.get("name") if current_user else "")
+        first_token = raw_name.split()[0] if raw_name else ""
+        if first_token and len(first_token) >= 3:
+            filters.append(models.Profile.name.ilike(f"%{first_token}%"))
+        existing = db.scalars(
+            select(models.Profile).where(or_(*filters)).order_by(models.Profile.created_at.desc())
+        ).first()
+
+    if existing:
+        for k, v in data.items():
+            if v is not None:
+                setattr(existing, k, v)
+        # Ensure strict 1-to-1: delete any duplicate stale profile rows for this user
+        if user_id:
+            db.query(models.Profile).filter(
+                models.Profile.user_id == user_id,
+                models.Profile.id != existing.id
+            ).delete(synchronize_session=False)
+        db.commit()
+        db.refresh(existing)
+        return existing
+    else:
+        # If inserting into an empty table or sequence is desynced, reset sequence to max(id)+1 (or 1)
+        from sqlalchemy import text
+        try:
+            db.execute(text("SELECT setval(pg_get_serial_sequence('profiles', 'id'), COALESCE((SELECT MAX(id) FROM profiles), 0) + 1, false);"))
+            db.commit()
+        except Exception:
+            pass
+
+        profile = models.Profile(**data)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+        return profile
 
 
 @router.post("/parse-resume", response_model=schemas.ParseResumeResponse)
@@ -75,6 +127,45 @@ async def parse_resume(file: UploadFile = File(...)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse resume: {e}")
+
+
+@router.get("/me/latest", response_model=Optional[schemas.ProfileOut])
+def get_my_latest_profile(
+    db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user),
+):
+    """Retrieve the latest saved citizen profile for the current authenticated user."""
+    if not current_user or not current_user.get("id"):
+        return None
+
+    user_id = current_user["id"]
+    email = current_user.get("email")
+    from sqlalchemy import or_
+
+    filters = [models.Profile.user_id == user_id]
+    if email:
+        filters.append(models.Profile.email == email)
+    
+    raw_name = current_user.get("name") or ""
+    first_token = raw_name.split()[0] if raw_name else ""
+    if first_token and len(first_token) >= 3:
+        filters.append(models.Profile.name.ilike(f"%{first_token}%"))
+
+    profile = db.scalars(
+        select(models.Profile)
+        .where(or_(*filters))
+        .order_by(models.Profile.created_at.desc())
+    ).first()
+
+    # If this profile was legacy (user_id is null), automatically link it now!
+    if profile and not profile.user_id:
+        profile.user_id = user_id
+        if email and not profile.email:
+            profile.email = email
+        db.commit()
+        db.refresh(profile)
+
+    return profile
 
 
 @router.get("", response_model=list[schemas.ProfileOut])

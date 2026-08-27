@@ -10,9 +10,51 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  <link rel="alternate icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/static/favicon.svg" />
+  <link rel="stylesheet" href="/static/styles.css?v=5.2" />
 </head>
+<script>
+  window.redirectToKinde = function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var btn = document.getElementById('enterBtn');
+    var landing = document.getElementById('landing');
+    var loader = document.getElementById('authLoader');
+    var text = document.getElementById('authLoaderText');
+    
+    if (btn) {
+      btn.innerHTML = '<span class="spinner !w-4 !h-4 !border-white/30 !border-t-white !border-r-white mr-2"></span> Opening…';
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity = '0.9';
+    }
+    // 1. Play the curtain animation first
+    if (landing) {
+      landing.classList.add('open');
+    }
+    // 2. Prepare the loader behind the parting curtains
+    if (loader) {
+      loader.style.display = 'flex';
+      loader.style.opacity = '1';
+    }
+    if (text) {
+      text.textContent = 'Connecting to secure sign in…';
+    }
+    // 3. Wait for the 1.15s curtain animation to finish parting before redirecting
+    setTimeout(function() {
+      window.location.href = "/api/auth/login";
+    }, 1150);
+  };
+</script>
 <body class="grain">
+  <!-- Auth Transition Loader (behind landing, revealed when curtains part) -->
+  <div id="authLoader" class="fixed inset-0 z-[50] hidden flex-col items-center justify-center bg-[#faf9f6] transition-opacity duration-500">
+    <div class="spinner !w-11 !h-11 mb-4"></div>
+    <div class="landing-mark !mb-2 !w-12 !h-12 !text-base">LP</div>
+    <p class="font-display font-semibold text-base text-[#111]">LifePilot</p>
+    <p id="authLoaderText" class="text-xs text-[var(--muted)] mt-1 animate-pulse">Connecting to secure sign in…</p>
+  </div>
+
   <!-- Landing / curtain -->
   <div id="landing">
     <div class="curtain curtain-l"></div>
@@ -24,7 +66,7 @@
       <h1 class="landing-title">Claim every benefit<br/>you’re <em>entitled to.</em></h1>
       <div class="landing-rule"></div>
       <p class="landing-sub">LifePilot quietly does the research for you — discovering the scholarships, grants and government schemes you qualify for, and the exact steps to claim them.</p>
-      <button id="enterBtn" class="btn btn-primary px-7 py-3.5 text-base flex items-center gap-2">Enter LifePilot <span aria-hidden="true">→</span></button>
+      <button id="enterBtn" onclick="window.redirectToKinde(event)" class="btn btn-primary px-7 py-3.5 text-base flex items-center gap-2">Enter LifePilot <span aria-hidden="true">→</span></button>
       <p class="landing-trust"><b>Free &amp; open-source</b> · Runs on your device · <b>Your data never leaves your machine</b></p>
     </div>
     <p class="landing-hint">Press Enter or click to open</p>
@@ -89,6 +131,20 @@
           <button id="rerunBtn" class="btn btn-ghost px-3 py-2 hidden items-center gap-2">
             <i data-lucide="refresh-cw" class="w-4 h-4"></i><span class="hidden sm:inline">Re-run</span>
           </button>
+          <!-- Kinde Auth Badge -->
+          <div id="authContainer" class="flex items-center gap-2">
+            <button id="loginBtn" class="btn btn-ghost px-3 py-2 text-xs flex items-center gap-1.5 border border-[var(--border)] rounded-xl hover:border-[var(--accent)] transition" title="Sign In with Google / Email">
+              <i data-lucide="log-in" class="w-3.5 h-3.5 text-[var(--accent)]"></i>
+              <span class="font-semibold">Sign in</span>
+            </button>
+            <div id="userBadge" class="hidden items-center gap-2 glass rounded-xl px-2.5 py-1.5 text-xs border border-[var(--border)]">
+              <div id="userAvatar" class="w-6 h-6 rounded-full bg-[var(--accent)] text-[#1a1408] flex items-center justify-center font-bold text-[11px]">U</div>
+              <span id="userName" class="font-medium max-w-[120px] truncate hidden sm:inline">Citizen</span>
+              <button id="logoutBtn" class="text-[var(--muted)] hover:text-red-400 transition ml-1 p-0.5" title="Sign Out">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
           <button id="ctaProfile" class="btn btn-primary px-4 py-2 flex items-center gap-2" data-nav="profile">
             <i data-lucide="rocket" class="w-4 h-4"></i> Start
           </button>
@@ -350,9 +406,41 @@
               </div>
             </form>
           </div>
+
+          <!-- Danger Zone / Delete Account -->
+          <div class="max-w-2xl mx-auto glass rounded-3xl p-6 md:p-8 mt-6 border border-red-500/20">
+            <h3 class="font-display text-base font-bold text-red-600 mb-1 flex items-center gap-2">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500"></i> Danger Zone
+            </h3>
+            <p class="text-xs text-[var(--muted)] mb-4">Permanently delete your profile, agent discoveries, and citizen account from LifePilot and Neon Database.</p>
+            <button id="deleteAccountBtn" type="button" class="btn bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/30 px-4 py-2.5 text-xs font-semibold flex items-center gap-2 rounded-xl transition">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete Account &amp; Reset All Data
+            </button>
+          </div>
         </section>
 
       </main>
+    </div>
+  </div>
+
+  <!-- Delete Account Confirmation Modal -->
+  <div id="deleteModal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/40 backdrop-blur-md p-4 transition-all duration-200">
+    <div class="glass rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-red-500/30 text-center">
+      <div class="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="alert-triangle" class="w-7 h-7 text-red-500"></i>
+      </div>
+      <h3 class="font-display text-xl font-bold text-[#111] mb-2">Delete Account &amp; Reset Data?</h3>
+      <p class="text-xs text-[var(--muted)] leading-relaxed mb-6">
+        This will permanently erase your citizen profile, discovered schemes, matched opportunities, and sessions from <b>Neon Database</b> and <b>Kinde</b>. This action cannot be undone.
+      </p>
+      <div class="flex gap-3">
+        <button id="cancelDeleteBtn" type="button" class="btn btn-ghost px-5 py-3 flex-1 text-xs font-semibold rounded-xl">
+          Cancel
+        </button>
+        <button id="confirmDeleteBtn" type="button" class="btn bg-red-600 hover:bg-red-700 text-white px-5 py-3 flex-1 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition">
+          <i data-lucide="trash-2" class="w-4 h-4"></i> Yes, Delete Everything
+        </button>
+      </div>
     </div>
   </div>
 
@@ -383,6 +471,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=5.2"></script>
 </body>
 </html>

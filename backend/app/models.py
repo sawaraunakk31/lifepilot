@@ -17,10 +17,22 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String(120), primary_key=True)  # Kinde user ID
+    email: Mapped[str | None] = mapped_column(String(200), nullable=True, index=True)
+    name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    picture: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    last_login_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
 class Profile(Base):
     __tablename__ = "profiles"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
     name: Mapped[str] = mapped_column(String(120))
     email: Mapped[str | None] = mapped_column(String(200), nullable=True)
 

@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 # ---------- Profile ----------
 class ProfileBase(BaseModel):
+    user_id: str | None = None
     name: str = Field(min_length=1, max_length=120)
     email: str | None = Field(default=None, max_length=200)
     age: int | None = Field(default=None, ge=5, le=120)

@@ -6,6 +6,9 @@ pydantic==2.10.4
 pydantic-settings==2.7.1
 python-dotenv==1.0.1
 python-multipart==0.0.20
+psycopg[binary]>=3.2.0
+psycopg2-binary>=2.9.9
+pyjwt[crypto]>=2.9.0
 
 # LLM API clients (free tiers)
 # Using native httpx instead of SDKs for speed & minimal dependencies

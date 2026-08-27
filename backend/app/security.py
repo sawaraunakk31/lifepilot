@@ -21,11 +21,12 @@ _CSP = "; ".join([
     "script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com 'unsafe-eval'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data:",
-    "connect-src 'self'",
+    "img-src 'self' data: https://*.googleusercontent.com https://*.gravatar.com https://*.kinde.com",
+    "connect-src 'self' https://*.kinde.com https://lifepilotauth.kinde.com",
+    "frame-src 'self' https://*.kinde.com https://lifepilotauth.kinde.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
+    "form-action 'self' https://*.kinde.com https://lifepilotauth.kinde.com",
     "object-src 'none'",
 ])
 
@@ -33,9 +34,9 @@ _SECURITY_HEADERS = {
     "Content-Security-Policy": _CSP,
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
-    "Referrer-Policy": "no-referrer",
+    "Referrer-Policy": "no-referrer-when-downgrade",
     "Permissions-Policy": "geolocation=(), camera=(), microphone=(), payment=()",
-    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
 }
 
 

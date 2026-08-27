@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./lifepilot.db"
     allowed_origins: str = "http://127.0.0.1:8000,http://localhost:8000"
 
+    # ── Kinde Auth ───────────────────────────────────────────
+    kinde_domain: str = ""
+    kinde_client_id: str = ""
+    kinde_m2m_client_id: str = ""
+    kinde_m2m_client_secret: str = ""
+
     # ── LLM ──────────────────────────────────────────────────
     # Providers: "groq" | "gemini" | "ollama" | "mock"
     llm_provider: str = "groq"
