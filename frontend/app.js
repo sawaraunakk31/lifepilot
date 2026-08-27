@@ -11,7 +11,15 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
 
 const fmtINR = (n) => '₹' + Math.round(n || 0).toLocaleString('en-IN');
 
-async function api(path, opts) {
+let kindeClient = null;
+let currentAuthUser = null;
+let authToken = null;
+
+async function api(path, opts = {}) {
+  opts.headers = opts.headers || {};
+  if (authToken) {
+    opts.headers['Authorization'] = `Bearer ${authToken}`;
+  }
   const r = await fetch(path, opts);
   if (!r.ok) {
     let detail = r.statusText;
@@ -684,36 +692,320 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'Enter') { paletteItems[paletteIdx]?.run(); closePalette(); }
 });
 
-// ───────── landing curtain ─────────
+// ───────── landing curtain & entry ─────────
 const landingEl = $('#landing');
 let landingOpened = false;
-function enterApp() {
-  if (landingOpened || !landingEl) return; landingOpened = true;
-  landingEl.classList.add('open');
-  setTimeout(() => { landingEl.style.display = 'none'; }, 1150);
+
+function openCurtain() {
+  if (landingOpened) return;
+  landingOpened = true;
+  const el = $('#landing');
+  if (el) {
+    el.classList.add('open');
+    setTimeout(() => {
+      el.style.display = 'none';
+    }, 1150);
+  }
 }
-$('#enterBtn')?.addEventListener('click', enterApp);
+
+function redirectToKindeAuth() {
+  const btn = $('#enterBtn');
+  const landing = $('#landing');
+  const loader = $('#authLoader');
+  const text = $('#authLoaderText');
+
+  if (btn) {
+    btn.innerHTML = '<span class="spinner !w-4 !h-4 !border-white/30 !border-t-white !border-r-white mr-2"></span> Opening…';
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.9';
+  }
+  // 1. Play the curtain animation first
+  if (landing) {
+    landing.classList.add('open');
+  }
+  // 2. Prepare the loader behind the parting curtains
+  if (loader) {
+    loader.style.display = 'flex';
+    loader.style.opacity = '1';
+  }
+  if (text) {
+    text.textContent = 'Connecting to secure sign in…';
+  }
+  // 3. Wait for the 1.15s curtain animation to finish parting before redirecting
+  setTimeout(() => {
+    window.location.href = '/api/auth/login';
+  }, 1150);
+}
+
+$('#enterBtn')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  redirectToKindeAuth();
+});
+
 document.addEventListener('keydown', (e) => {
   if (!landingOpened && landingEl && getComputedStyle(landingEl).display !== 'none' && e.key === 'Enter') {
-    e.preventDefault(); enterApp();
+    e.preventDefault();
+    redirectToKindeAuth();
+  }
+});
+
+async function loadAndPopulateProfile(user) {
+  try {
+    const saved = await api('/api/profiles/me/latest');
+    const f = $('#profileForm');
+    if (saved && saved.id) {
+      state.profileId = saved.id;
+      state.profile = saved;
+      localStorage.setItem('lp_pid', saved.id);
+      localStorage.setItem('lp_profile', JSON.stringify(saved));
+      
+      // Pre-fill all fields in the Profile form
+      if (f) {
+        if (f.name) f.name.value = saved.name || '';
+        if (f.email) f.email.value = saved.email || user?.email || '';
+        if (f.age) f.age.value = saved.age != null ? saved.age : '';
+        if (f.gender) f.gender.value = saved.gender || '';
+        if (f.state) f.state.value = saved.state || '';
+        if (f.category) f.category.value = saved.category || '';
+        if (f.education_level) f.education_level.value = saved.education_level || '';
+        if (f.field_of_study) f.field_of_study.value = saved.field_of_study || '';
+        if (f.annual_income) f.annual_income.value = saved.annual_income != null ? saved.annual_income : '';
+        if (f.disability) f.disability.checked = !!saved.disability;
+        if (f.goals) f.goals.value = saved.goals || '';
+      }
+
+      switchView('profile');
+      return true;
+    } else {
+      if (f) {
+        if (f.name && user?.name) f.name.value = user.name;
+        if (f.email && user?.email) f.email.value = user.email;
+      }
+      switchView('profile');
+      return false;
+    }
+  } catch (err) {
+    console.debug('Profile load notice:', err);
+    switchView('profile');
+    return false;
+  }
+}
+
+// ───────── Kinde Auth ─────────
+async function initAuth() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+
+    if (code) {
+      const loader = $('#authLoader');
+      const loaderText = $('#authLoaderText');
+      if (loader) {
+        loader.style.display = 'flex';
+        loader.style.opacity = '1';
+      }
+      if (loaderText) {
+        loaderText.textContent = 'Authenticating & loading your citizen profile…';
+      }
+
+      const redirectUri = window.location.origin;
+      try {
+        const res = await api('/api/auth/exchange', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, redirect_uri: redirectUri }),
+        });
+        if (res && res.access_token) {
+          authToken = res.access_token;
+          localStorage.setItem('lifepilot_auth_token', authToken);
+          currentAuthUser = res.user;
+          updateAuthUI(true, currentAuthUser);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          await loadAndPopulateProfile(currentAuthUser);
+          openCurtain();
+          if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+              loader.style.display = 'none';
+              document.documentElement.classList.remove('is-authenticating');
+            }, 500);
+          }
+          toast(`Welcome, ${currentAuthUser?.name || 'Citizen'}!`, 'good');
+          return;
+        }
+      } catch (err) {
+        console.error('Token exchange notice:', err);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        if (loader) {
+          loader.style.opacity = '0';
+          setTimeout(() => {
+            loader.style.display = 'none';
+            document.documentElement.classList.remove('is-authenticating');
+          }, 500);
+        }
+      }
+    }
+
+    // Check stored token
+    const storedToken = localStorage.getItem('lifepilot_auth_token');
+    if (storedToken) {
+      authToken = storedToken;
+      try {
+        const me = await api('/api/auth/me');
+        if (me && me.authenticated && me.user) {
+          currentAuthUser = me.user;
+          updateAuthUI(true, currentAuthUser);
+          await loadAndPopulateProfile(currentAuthUser);
+          openCurtain();
+          const loader = $('#authLoader');
+          if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+              loader.style.display = 'none';
+              document.documentElement.classList.remove('is-authenticating');
+            }, 500);
+          }
+          return;
+        }
+      } catch {
+        localStorage.removeItem('lifepilot_auth_token');
+        authToken = null;
+      }
+    }
+
+    // User is NOT authenticated: keep landing active
+    landingOpened = false;
+    const el = $('#landing');
+    if (el) {
+      el.classList.remove('open');
+      el.style.display = 'block';
+    }
+    updateAuthUI(false);
+  } catch (err) {
+    console.debug('Auth init notice:', err);
+    landingOpened = false;
+    const el = $('#landing');
+    if (el) {
+      el.classList.remove('open');
+      el.style.display = 'block';
+    }
+    updateAuthUI(false);
+  }
+}
+
+function updateAuthUI(isAuth, user) {
+  const loginBtn = $('#loginBtn');
+  const userBadge = $('#userBadge');
+  const userName = $('#userName');
+  const userAvatar = $('#userAvatar');
+
+  if (isAuth && user) {
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (userBadge) {
+      userBadge.style.display = 'inline-flex';
+      userBadge.classList.remove('hidden');
+    }
+    const displayName = user.given_name || user.name || user.email?.split('@')[0] || 'Citizen';
+    if (userName) userName.textContent = displayName;
+    if (userAvatar) {
+      const initial = (user.given_name || user.name || user.email || 'U')[0].toUpperCase();
+      if (user.picture) {
+        userAvatar.innerHTML = `<img src="${esc(user.picture)}" class="w-full h-full rounded-full object-cover" alt="Avatar"/>`;
+      } else {
+        userAvatar.textContent = initial;
+      }
+    }
+  } else {
+    if (loginBtn) {
+      loginBtn.style.display = 'inline-flex';
+      loginBtn.classList.remove('hidden');
+    }
+    if (userBadge) {
+      userBadge.style.display = 'none';
+      userBadge.classList.add('hidden');
+    }
+  }
+  icons();
+}
+
+$('#loginBtn')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  redirectToKindeAuth();
+});
+
+$('#logoutBtn')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  localStorage.removeItem('lifepilot_auth_token');
+  authToken = null;
+  currentAuthUser = null;
+  document.documentElement.classList.remove('is-authenticated');
+  updateAuthUI(false);
+  window.location.href = '/api/auth/logout';
+});
+
+$('#deleteAccountBtn')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  const modal = $('#deleteModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    icons();
+  }
+});
+
+$('#cancelDeleteBtn')?.addEventListener('click', () => {
+  const modal = $('#deleteModal');
+  if (modal) modal.style.display = 'none';
+});
+
+$('#deleteModal')?.addEventListener('click', (e) => {
+  if (e.target.id === 'deleteModal') {
+    $('#deleteModal').style.display = 'none';
+  }
+});
+
+$('#confirmDeleteBtn')?.addEventListener('click', async (e) => {
+  e.preventDefault();
+  const btn = $('#confirmDeleteBtn');
+  if (btn) {
+    btn.innerHTML = `<span class="spinner !w-4 !h-4 !border-white/30 !border-t-white !border-r-white mr-2"></span> Deleting…`;
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.85';
+  }
+  try {
+    const res = await api('/api/auth/account', { method: 'DELETE' });
+    localStorage.clear();
+    authToken = null;
+    currentAuthUser = null;
+    state.profile = null;
+    state.profileId = null;
+    state.opportunities = [];
+    state.logs = [];
+    state.ownedDocs = new Set();
+    state.vaultKeys = new Set();
+    document.documentElement.classList.remove('is-authenticated');
+    updateAuthUI(false);
+    toast('Account and data permanently deleted.', 'info');
+    if (res && res.logout_url) {
+      window.location.href = res.logout_url;
+    } else {
+      window.location.href = '/api/auth/logout';
+    }
+  } catch (err) {
+    toast(`Could not delete account: ${err.message}`, 'bad');
+    if (btn) {
+      btn.innerHTML = `<i data-lucide="trash-2" class="w-4 h-4"></i> Yes, Delete Everything`;
+      btn.style.pointerEvents = 'auto';
+      btn.style.opacity = '1';
+      icons();
+    }
   }
 });
 
 // ───────── boot ─────────
 async function boot() {
   icons();
-  renderSuggestions();
-  updateSliderFill();
-  setupMagnetic();
-  await loadVault();
   checkHealth();
-  if (state.profileId) {
-    showOverlay();
-    try { await runAgents(); addBubble(`Hi! I'm your LifePilot assistant. Ask me anything about your ${state.run.insights.eligible_count} eligible schemes.`, 'bot'); }
-    catch { toast('Could not restore last session', 'warn'); localStorage.removeItem('lp_pid'); }
-    finally { hideOverlay(); }
-  } else {
-    addBubble("Hi! I'm your LifePilot assistant. Create a profile and I'll help you claim every benefit you're entitled to.", 'bot');
-  }
+  await initAuth();
+  addBubble("Hi! I'm your LifePilot assistant. Let me know when you'd like to explore schemes or ask questions about your eligibility.", 'bot');
 }
 boot();
