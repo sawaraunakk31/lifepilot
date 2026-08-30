@@ -59,9 +59,9 @@ class EligibilityAgent(BaseAgent):
             # Step 1: Rule-based evaluation (always runs, fast, deterministic)
             elig = elig_engine.evaluate(profile, opp)
 
-            # Step 2: LLM enhancement (if available)
+            # Step 2: LLM enhancement (if available, skip in simulation mode)
             llm_conf = elig.confidence
-            if self.llm.name != "mock" and opp.get("criteria"):
+            if self.llm.name != "mock" and opp.get("criteria") and profile.get("name") != "Simulation":
                 try:
                     llm_result = self._llm_evaluate(profile, opp, elig)
                     if llm_result:
@@ -98,6 +98,7 @@ class EligibilityAgent(BaseAgent):
                 "documents": opp.get("documents", []),
                 "roadmap": [],
                 "source": opp.get("source", "curated"),
+                "criteria": opp.get("criteria", {}),
             })
 
         # Sort: eligible first → highest score → soonest deadline

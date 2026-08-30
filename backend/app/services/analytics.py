@@ -62,9 +62,9 @@ def build_insights(matches: list[dict], owned_documents: list[str] | None = None
     for m in eligible:
         estimated_benefit += parse_amount(m.get("amount"))
 
-    # Master, de-duplicated document checklist across eligible schemes.
+    # Master, de-duplicated document checklist across all matched schemes.
     doc_map: dict[str, dict] = {}
-    for m in eligible:
+    for m in matches:
         for doc in m.get("documents", []):
             key = doc.strip().lower()
             if key not in doc_map:

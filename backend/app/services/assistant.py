@@ -41,6 +41,7 @@ def answer(
         question=question,
         matches=matches,
         profile=profile,
+        chat_history=context,
     )
 
     # Store assistant response in memory

@@ -111,7 +111,13 @@ def _scrape_myscheme(url: str) -> list[dict]:
             schemes = []
             for item in soup.select("h2, h3, a.scheme-card, .text-xl"):
                 text = item.get_text(strip=True)
-                if "scheme" in text.lower() or "yojana" in text.lower():
+                if len(text) < 15 or len(text) > 150:
+                    continue
+                # Skip generic page headers/buttons
+                text_lower = text.lower()
+                if any(x in text_lower for x in ("find schemes", "search schemes", "eligibility", "government schemes", "sign in", "about us")):
+                    continue
+                if "scheme" in text_lower or "yojana" in text_lower:
                     schemes.append({
                         "id": f"myscheme-{hashlib.md5(text.encode()).hexdigest()[:8]}",
                         "title": text,
@@ -143,12 +149,18 @@ def _scrape_rss_jobs(url: str) -> list[dict]:
                 desc = item.find("description")
                 if title and link:
                     title_text = title.get_text(strip=True)
+                    raw_desc = desc.get_text(strip=True) if desc else ""
+                    if "<" in raw_desc and ">" in raw_desc:
+                        try:
+                            raw_desc = BeautifulSoup(raw_desc, "html.parser").get_text(separator=" ", strip=True)
+                        except Exception:
+                            pass
                     jobs.append({
                         "id": f"job-rss-{hashlib.md5(title_text.encode()).hexdigest()[:8]}",
                         "title": title_text,
                         "provider": "Job Portal",
                         "url": link.get_text(strip=True),
-                        "description": desc.get_text(strip=True)[:200] if desc else "",
+                        "description": raw_desc[:300].strip(),
                         "source": "scraped_rss",
                         "category": "job",
                     })

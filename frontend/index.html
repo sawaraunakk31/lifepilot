@@ -13,7 +13,7 @@
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
   <link rel="alternate icon" href="/favicon.ico" />
   <link rel="apple-touch-icon" href="/static/favicon.svg" />
-  <link rel="stylesheet" href="/static/styles.css?v=5.2" />
+  <link rel="stylesheet" href="/static/styles.css?var=6.0" />
 </head>
 <script>
   window.redirectToKinde = function(e) {
@@ -95,7 +95,8 @@
 
       <nav class="flex flex-col gap-1 mt-2">
         <div class="nav-item active" data-nav="dashboard"><i data-lucide="layout-dashboard" class="w-[18px] h-[18px]"></i> Dashboard</div>
-        <div class="nav-item" data-nav="discover"><i data-lucide="compass" class="w-[18px] h-[18px]"></i> Discover</div>
+        <div class="nav-item" data-nav="discover"><i data-lucide="compass" class="w-[18px] h-[18px]"></i> Discover Schemes</div>
+        <div class="nav-item" data-nav="jobs"><i data-lucide="briefcase" class="w-[18px] h-[18px]"></i> Discover Jobs</div>
         <div class="nav-item" data-nav="simulator"><i data-lucide="sliders-horizontal" class="w-[18px] h-[18px]"></i> What-If Simulator</div>
         <div class="nav-item" data-nav="assistant"><i data-lucide="sparkles" class="w-[18px] h-[18px]"></i> AI Assistant</div>
         <div class="nav-item" data-nav="documents"><i data-lucide="folder-check" class="w-[18px] h-[18px]"></i> Documents</div>
@@ -273,6 +274,90 @@
           <div id="discoverGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
           <div id="discoverEmpty" class="glass rounded-3xl p-10 text-center text-[var(--muted)] text-sm hidden">
             Create a profile first to see your personalised matches.
+          </div>
+        </section>
+
+        <!-- ══════════ JOBS ══════════ -->
+        <section class="view" data-view="jobs">
+          <div class="glass rounded-2xl p-4 mb-5 flex items-start gap-3">
+            <i data-lucide="briefcase" class="w-5 h-5 text-[var(--accent)] mt-0.5"></i>
+            <p class="text-sm text-[var(--muted)]">Upload or paste your resume, specify desired job roles and skills, and click <b>Scan Jobs</b> to instantly evaluate and match open job roles against your career profile and CV.</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+            <!-- Sidebar: Preferences & Resume input -->
+            <div class="lg:col-span-2 glass rounded-3xl p-6 space-y-5">
+              <div>
+                <label class="text-xs text-[var(--muted)]">Desired Role / Title</label>
+                <input id="jobRole" class="field mt-1" placeholder="e.g. Software Engineer, Sales Associate" value="Developer" />
+              </div>
+              
+              <div>
+                <label class="text-xs text-[var(--muted)]">Skills (Comma separated)</label>
+                <input id="jobSkills" class="field mt-1" placeholder="e.g. python, javascript, sql, sales" value="" />
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs text-[var(--muted)]">Job Location</label>
+                  <select id="jobLocFilter" class="field mt-1">
+                    <option value="all">All Locations</option>
+                    <option value="India" selected>India Only</option>
+                    <option value="Global">International</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-[var(--muted)]">Job Type</label>
+                  <select id="jobTypeFilter" class="field mt-1">
+                    <option value="all">All Types</option>
+                    <option value="Remote">Remote Only</option>
+                    <option value="On-location">On-location/Hybrid</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1.5">
+                  <span class="text-[var(--muted)]">Min Annual Salary</span>
+                  <span id="jobSalaryLabel" class="font-semibold text-[var(--gold-2)]">All</span>
+                </div>
+                <input id="jobSalaryFilter" type="range" min="0" max="3000000" step="50000" value="0" class="w-full accent-[var(--accent)]" />
+              </div>
+
+              <div>
+                <label class="text-xs text-[var(--muted)] flex justify-between">
+                  <span>Resume Text (or paste CV content)</span>
+                  <span id="attachResumeLink" class="text-[10px] text-[var(--gold-2)] cursor-pointer">Attach file instead</span>
+                </label>
+                <textarea id="jobResume" class="field mt-1 w-full h-32 text-xs font-mono resize-none" placeholder="Paste your resume/cv content here..."></textarea>
+                <input id="resumeFile" type="file" class="hidden" accept=".txt,.pdf" />
+              </div>
+
+              <button id="scanJobsBtn" class="btn btn-primary w-full py-3 flex items-center justify-center gap-2">
+                <i data-lucide="scan" class="w-4 h-4"></i> Scan Jobs & Check Eligibility
+              </button>
+            </div>
+
+            <!-- Main: Matching Jobs List -->
+            <div class="lg:col-span-3 space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="relative flex-1 min-w-[200px]">
+                  <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]"></i>
+                  <input id="jobsSearch" class="field pl-9" placeholder="Filter jobs, companies…" />
+                </div>
+                <div class="flex gap-2" id="jobsChips">
+                  <span class="chip active" data-job-filter="all">All Match</span>
+                  <span class="chip" data-job-filter="eligible">Eligible</span>
+                  <span class="chip" data-job-filter="partial">Gaps</span>
+                </div>
+              </div>
+
+              <div id="jobsList" class="space-y-4 min-h-[300px]">
+                <div class="glass rounded-3xl p-10 text-center text-[var(--muted)] text-sm">
+                  Click <b>Scan Jobs</b> to find matching vacancies tailored for your profile.
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -471,6 +556,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
-  <script src="/static/app.js?v=5.2"></script>
+  <script src="/static/app.js?v=6.0"></script>
 </body>
 </html>

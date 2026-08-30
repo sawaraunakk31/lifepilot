@@ -78,9 +78,9 @@ class RoadmapAgent(BaseAgent):
         insights = analytics.build_insights(matches, owned_docs)
         state.insights.update(insights)
 
-        # Generate intro with LLM
+        # Generate intro with LLM (skip in simulation mode to stay fast & offline)
         top = eligible[0] if eligible else None
-        if top and self.llm.name != "mock":
+        if top and self.llm.name != "mock" and profile.get("name") != "Simulation":
             nearest = None
             for m in eligible:
                 dl = _days_left(m.get("deadline"))

@@ -85,11 +85,11 @@ class MatchResult(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     run_id: Mapped[int] = mapped_column(ForeignKey("agent_runs.id", ondelete="CASCADE"))
 
-    opportunity_id: Mapped[str] = mapped_column(String(80))
-    title: Mapped[str] = mapped_column(String(240))
-    provider: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    url: Mapped[str | None] = mapped_column(String(400), nullable=True)
-    amount: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    opportunity_id: Mapped[str] = mapped_column(String(400))
+    title: Mapped[str] = mapped_column(String(400))
+    provider: Mapped[str | None] = mapped_column(String(400), nullable=True)
+    url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    amount: Mapped[str | None] = mapped_column(String(300), nullable=True)
     deadline: Mapped[str | None] = mapped_column(String(40), nullable=True)
 
     eligible: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -100,5 +100,24 @@ class MatchResult(Base):
     unmet: Mapped[list] = mapped_column(JSON, default=list)
     documents: Mapped[list] = mapped_column(JSON, default=list)
     roadmap: Mapped[list] = mapped_column(JSON, default=list)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    criteria: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     run: Mapped["AgentRun"] = relationship(back_populates="matches")
+
+
+class JobOpportunity(Base):
+    __tablename__ = "job_opportunities"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    title: Mapped[str] = mapped_column(String(240))
+    company: Mapped[str] = mapped_column(String(200))
+    location: Mapped[str] = mapped_column(String(200))
+    job_type: Mapped[str] = mapped_column(String(40))
+    country: Mapped[str] = mapped_column(String(40))
+    salary_num: Mapped[int] = mapped_column(Integer)
+    salary: Mapped[str] = mapped_column(String(120))
+    description: Mapped[str] = mapped_column(Text)
+    url: Mapped[str] = mapped_column(String(400))
+    category: Mapped[str] = mapped_column(String(40), default="job")
+    source: Mapped[str] = mapped_column(String(40), default="database")

@@ -94,6 +94,7 @@ const saveDocs = () => localStorage.setItem('lp_docs', JSON.stringify([...state.
 const PAGE_META = {
   dashboard: ['Dashboard', 'Your personalised opportunity cockpit'],
   discover: ['Discover', 'Every scheme matched to your profile'],
+  jobs: ['Discover Jobs', 'Match open vacancies against your profile and CV'],
   simulator: ['What-If Simulator', 'Model scenarios without saving anything'],
   assistant: ['AI Assistant', 'Ask anything about your matches'],
   documents: ['Documents', 'Your combined readiness checklist'],
@@ -324,10 +325,52 @@ function matchCard(m) {
   const badge = m.eligible ? `<span class="chip badge-good">Eligible</span>` : `<span class="chip badge-warn">Partial</span>`;
   const dlTxt = m.deadline ? (dl < 0 ? `<span style="color:var(--bad)">Closed</span>` : `${esc(m.deadline)} · ${dl}d`) : 'See portal';
   const col = m.eligible ? 'var(--good)' : 'var(--warn)';
+  
   const reasons = (m.reasons || []).map((r) => `<li class="flex gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 mt-0.5" style="color:var(--good)"></i><span>${esc(r)}</span></li>`).join('');
   const unmet = (m.unmet || []).map((r) => `<li class="flex gap-1.5"><i data-lucide="dot" class="w-3.5 h-3.5 mt-0.5" style="color:var(--warn)"></i><span>${esc(r)}</span></li>`).join('');
-  const docs = (m.documents || []).map((d) => `<li class="flex gap-1.5 text-[var(--muted)]"><i data-lucide="file" class="w-3.5 h-3.5 mt-0.5"></i>${esc(d)}</li>`).join('');
+  const docs = (m.documents || []).map((d) => {
+    const key = d.toLowerCase().trim();
+    const isAttached = state.ownedDocs?.has(key) || state.vaultKeys?.has(key);
+    if (isAttached) {
+      return `<li class="flex gap-1.5 text-[var(--text)]"><i data-lucide="check" class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color:var(--good)"></i><span style="color:var(--good);font-weight:500">${esc(d)}</span></li>`;
+    } else {
+      return `<li class="flex gap-1.5 text-[var(--muted)]"><i data-lucide="file" class="w-3.5 h-3.5 mt-0.5 shrink-0"></i><span>${esc(d)}</span></li>`;
+    }
+  }).join('');
   const road = (m.roadmap || []).map((s, i) => `<li class="flex gap-2"><span class="w-5 h-5 shrink-0 rounded-full text-[10px] font-bold flex items-center justify-center" style="background:rgba(201,162,75,.18);color:#e7c878">${i + 1}</span><span>${esc(s)}</span></li>`).join('');
+
+  // General Eligibility Rules & Criteria
+  let critHtml = '';
+  if (m.criteria && Object.keys(m.criteria).length) {
+    const items = [];
+    if (m.criteria.category) items.push(`<b>Category:</b> ${m.criteria.category.join(', ')}`);
+    if (m.criteria.education_level) items.push(`<b>Education:</b> ${m.criteria.education_level.join(', ')}`);
+    if (m.criteria.max_income) items.push(`<b>Max Income:</b> ₹${Number(m.criteria.max_income).toLocaleString('en-IN')}`);
+    if (m.criteria.max_age) items.push(`<b>Max Age:</b> ${m.criteria.max_age}`);
+    if (m.criteria.gender) items.push(`<b>Gender:</b> ${m.criteria.gender.join(', ')}`);
+    if (m.criteria.state) items.push(`<b>State/Domicile:</b> ${m.criteria.state.join(', ')}`);
+    if (m.criteria.field_of_study) items.push(`<b>Field:</b> ${m.criteria.field_of_study.join(', ')}`);
+    if (m.criteria.disability) items.push(`<b>Disability:</b> Yes`);
+    
+    if (items.length) {
+      critHtml = `
+        <div class="mt-3 text-[11px] border-t pt-2 border-dashed" style="border-color:rgba(255,255,255,0.06)">
+          <p class="font-semibold mb-1" style="color:var(--gold-2)">General Eligibility Rules & Criteria:</p>
+          <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[var(--muted)]">
+            ${items.map((it) => `<li class="flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5 shrink-0 text-[var(--gold-2)]"></i><span>${it}</span></li>`).join('')}
+          </ul>
+        </div>`;
+    }
+  }
+
+  // Required Documents directly visible
+  const docsHtml = docs ? `
+    <div class="mt-3 text-[11px] border-t pt-2 border-dashed" style="border-color:rgba(255,255,255,0.06)">
+      <p class="font-semibold mb-1" style="color:var(--text)">Required Documents:</p>
+      <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[var(--muted)]">
+        ${docs}
+      </ul>
+    </div>` : '';
 
   return `<div class="glass glass-hover rounded-2xl p-5">
     <div class="flex items-start justify-between gap-3">
@@ -338,18 +381,26 @@ function matchCard(m) {
     </div>
     <div class="h-1 rounded-full mt-3 overflow-hidden" style="background:rgba(255,255,255,.06)"><div style="width:${Math.round(m.score * 100)}%;height:100%;background:linear-gradient(90deg,#e7c878,#c9a24b)"></div></div>
     <div class="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-[var(--muted)]"><span>💰 ${esc(m.amount || '—')}</span><span>📅 ${dlTxt}</span></div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 text-xs">
-      ${reasons ? `<div><p class="font-semibold mb-1">Why you qualify</p><ul class="space-y-1">${reasons}</ul></div>` : ''}
-      ${unmet ? `<div><p class="font-semibold mb-1">Gaps to check</p><ul class="space-y-1">${unmet}</ul></div>` : ''}
+    
+    ${m.description ? `<p class="text-[11px] text-[var(--muted)] mt-2.5 leading-relaxed">${esc(m.description)}</p>` : ''}
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 text-[11px]">
+      ${reasons ? `<div><p class="font-semibold mb-1" style="color:var(--good)">Why you qualify</p><ul class="space-y-1">${reasons}</ul></div>` : ''}
+      ${unmet ? `<div><p class="font-semibold mb-1" style="color:var(--warn)">Gaps to check</p><ul class="space-y-1">${unmet}</ul></div>` : ''}
     </div>
+    
+    ${critHtml}
+    ${docsHtml}
+    
+    ${road ? `
     <details class="mt-3">
-      <summary class="cursor-pointer text-xs font-semibold flex items-center gap-1" style="color:#e7c878"><i data-lucide="list-checks" class="w-3.5 h-3.5"></i> Documents & roadmap</summary>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 text-xs">
-        <div><p class="font-semibold mb-1">Documents</p><ul class="space-y-1">${docs}</ul></div>
-        <div><p class="font-semibold mb-1">Roadmap</p><ol class="space-y-1.5">${road}</ol></div>
+      <summary class="cursor-pointer text-xs font-semibold flex items-center gap-1" style="color:#e7c878"><i data-lucide="map" class="w-3.5 h-3.5"></i> Application Roadmap</summary>
+      <div class="mt-2 text-[11px]">
+        <ol class="space-y-1.5">${road}</ol>
       </div>
-    </details>
-    ${m.url ? `<a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-3 text-xs font-semibold" style="color:#e7c878">Open official portal <i data-lucide="external-link" class="w-3 h-3"></i></a>` : ''}
+    </details>` : ''}
+    
+    ${m.url ? `<a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-3.5 text-xs font-semibold" style="color:#e7c878">Open official portal <i data-lucide="external-link" class="w-3 h-3"></i></a>` : ''}
   </div>`;
 }
 
@@ -387,7 +438,8 @@ async function runSimulation() {
     const sign = (x) => (x > 0 ? '+' : '');
     const col = dE > 0 || dB > 0 ? 'var(--good)' : dE < 0 || dB < 0 ? 'var(--bad)' : 'var(--muted)';
     $('#simDelta').style.color = col;
-    $('#simDelta').textContent = state.baseline.eligible || state.baseline.benefit ? `${sign(dE)}${dE} · ${sign(dB)}${fmtINR(Math.abs(dB)).replace('₹', dB < 0 ? '-₹' : '₹')}` : '—';
+    const deltaFormatted = `${sign(dE)}${dE} schemes | ${dB < 0 ? '-' : dB > 0 ? '+' : ''}${fmtINR(Math.abs(dB))}`;
+    $('#simDelta').textContent = state.baseline.eligible || state.baseline.benefit ? deltaFormatted : '—';
     const elig = res.matches.filter((m) => m.eligible);
     $('#simList').innerHTML = (elig.length ? elig : res.matches.slice(0, 5)).map((m) => `
       <div class="flex items-center justify-between gap-3 glass rounded-xl px-3 py-2">
@@ -506,7 +558,7 @@ function renderDocuments() {
 
   $$('[data-doc]', list).forEach((cb) => cb.addEventListener('change', () => {
     cb.checked ? state.ownedDocs.add(cb.dataset.doc) : state.ownedDocs.delete(cb.dataset.doc);
-    saveDocs(); renderDocuments(); refreshReadiness();
+    saveDocs(); renderDocuments(); refreshReadiness(); drawDiscoverGrid();
   }));
   $$('[data-upload]', list).forEach((inp) => inp.addEventListener('change', async (e) => {
     const f = e.target.files[0]; if (!f) return;
@@ -517,7 +569,7 @@ function renderDocuments() {
       state.vaultKeys.add(key); state.vaultMeta[key] = { name: f.name, size: f.size };
       state.ownedDocs.add(key); saveDocs();
       toast('Stored securely on your device — never uploaded', 'good');
-      renderDocuments(); refreshReadiness();
+      renderDocuments(); refreshReadiness(); drawDiscoverGrid();
     } catch { toast('Could not store the file locally', 'bad'); }
   }));
   $$('[data-open]', list).forEach((b) => b.addEventListener('click', async () => {
@@ -528,7 +580,7 @@ function renderDocuments() {
   $$('[data-remove]', list).forEach((b) => b.addEventListener('click', async () => {
     const key = b.dataset.remove;
     await vaultDelete(key); state.vaultKeys.delete(key); delete state.vaultMeta[key];
-    toast('Removed from your device', 'info'); renderDocuments(); refreshReadiness();
+    toast('Removed from your device', 'info'); renderDocuments(); refreshReadiness(); drawDiscoverGrid();
   }));
   refreshReadiness();
   icons();
@@ -536,7 +588,7 @@ function renderDocuments() {
 
 $('#clearVaultBtn')?.addEventListener('click', async () => {
   await vaultClear(); state.vaultKeys.clear(); state.vaultMeta = {};
-  toast('Vault cleared from this device', 'info'); renderDocuments(); refreshReadiness();
+  toast('Vault cleared from this device', 'info'); renderDocuments(); refreshReadiness(); drawDiscoverGrid();
 });
 
 // ───────── ACTIVITY ─────────
@@ -1000,6 +1052,203 @@ $('#confirmDeleteBtn')?.addEventListener('click', async (e) => {
     }
   }
 });
+
+
+// ───────── DISCOVER JOBS ─────────
+state.jobsFilter = 'all';
+state.matchedJobs = [];
+
+function initJobsView() {
+  const chips = $('#jobsChips');
+  if (chips) {
+    $$('[data-job-filter]', chips).forEach((c) => c.addEventListener('click', () => {
+      $$('[data-job-filter]', chips).forEach((x) => x.classList.remove('active'));
+      c.classList.add('active');
+      state.jobsFilter = c.dataset.jobFilter;
+      drawJobsGrid();
+    }));
+  }
+  
+  $('#jobLocFilter')?.addEventListener('change', drawJobsGrid);
+  $('#jobTypeFilter')?.addEventListener('change', drawJobsGrid);
+  
+  const salSlider = $('#jobSalaryFilter');
+  if (salSlider) {
+    salSlider.addEventListener('input', (e) => {
+      const v = +e.target.value;
+      const label = $('#jobSalaryLabel');
+      if (label) {
+        label.textContent = v === 0 ? 'All' : (v >= 100000 ? `₹${(v / 100000).toFixed(1)}L+` : `₹${v.toLocaleString('en-IN')}+`);
+      }
+      drawJobsGrid();
+    });
+  }
+}
+initJobsView();
+
+$('#jobsSearch')?.addEventListener('input', drawJobsGrid);
+
+$('#attachResumeLink')?.addEventListener('click', () => {
+  $('#resumeFile').click();
+});
+
+$('#resumeFile')?.addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  
+  if (f.name.toLowerCase().endsWith('.pdf')) {
+    const fd = new FormData();
+    fd.append('file', f);
+    toast('Parsing PDF resume content...', 'info');
+    try {
+      const res = await api('/api/opportunities/jobs/parse-resume', {
+        method: 'POST',
+        body: fd
+      });
+      $('#jobResume').value = res.text;
+      toast('PDF resume content parsed and loaded', 'good');
+    } catch (err) {
+      toast('Failed to parse PDF resume: ' + err.message, 'bad');
+    }
+  } else if (f.name.toLowerCase().endsWith('.txt')) {
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      $('#jobResume').value = evt.target.result;
+      toast('Resume loaded successfully', 'good');
+    };
+    reader.readAsText(f);
+  } else {
+    toast('Unsupported file type. Please upload a PDF or TXT file.', 'warn');
+  }
+});
+
+$('#scanJobsBtn')?.addEventListener('click', async () => {
+  if (!state.profile) {
+    toast('Please save a profile first under Profile & Settings', 'warn');
+    return;
+  }
+  const btn = $('#scanJobsBtn');
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = `<span class="spinner !w-4 !h-4 !border-white/30 !border-t-white !border-r-white mr-2"></span> Scanning remote job feeds…`;
+  btn.style.pointerEvents = 'none';
+  btn.style.opacity = '0.8';
+  
+  const payload = {
+    profile: state.profile,
+    resume_text: $('#jobResume').value || '',
+    desired_role: $('#jobRole').value || '',
+    skills: ($('#jobSkills').value || '').split(',').map((s) => s.trim()).filter((s) => s.length > 0)
+  };
+  
+  try {
+    const jobs = await api('/api/opportunities/jobs/match', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    state.matchedJobs = jobs;
+    drawJobsGrid();
+    toast(`Found ${jobs.length} matching job vacancies`, 'good');
+  } catch (err) {
+    toast('Job scanning failed: ' + err.message, 'bad');
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.style.pointerEvents = 'auto';
+    btn.style.opacity = '1';
+    icons();
+  }
+});
+
+function drawJobsGrid() {
+  const list = $('#jobsList');
+  if (!list) return;
+  if (!state.matchedJobs.length) {
+    list.innerHTML = `<div class="glass rounded-3xl p-10 text-center text-[var(--muted)] text-sm">Click <b>Scan Jobs</b> to find matching vacancies tailored for your profile.</div>`;
+    return;
+  }
+  
+  const q = ($('#jobsSearch').value || '').toLowerCase();
+  const locVal = $('#jobLocFilter')?.value || 'all';
+  const typeVal = $('#jobTypeFilter')?.value || 'all';
+  const salVal = $('#jobSalaryFilter') ? +$('#jobSalaryFilter').value : 0;
+  
+  let items = state.matchedJobs.filter((j) => {
+    if (state.jobsFilter === 'eligible' && !j.eligible) return false;
+    if (state.jobsFilter === 'partial' && j.eligible) return false;
+    
+    // Location Filter
+    if (locVal !== 'all') {
+      if (locVal === 'India' && j.country !== 'India') return false;
+      if (locVal === 'Global' && j.country !== 'Global') return false;
+    }
+    
+    // Job Type Filter
+    if (typeVal !== 'all') {
+      if (typeVal === 'Remote' && j.job_type !== 'Remote') return false;
+      if (typeVal === 'On-location' && j.job_type === 'Remote') return false;
+    }
+    
+    // Salary Filter (Convert USD base to INR at 1:85)
+    if (salVal > 0) {
+      const salComparison = j.country === 'Global' ? j.salary_num * 85 : j.salary_num;
+      if (salComparison < salVal) return false;
+    }
+    
+    if (q && !(`${j.title} ${j.company} ${j.description} ${j.location}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  
+  list.innerHTML = items.map(jobCard).join('') || `<div class="glass rounded-2xl p-6 text-sm text-[var(--muted)]">No jobs match this filter.</div>`;
+  icons();
+}
+
+function jobCard(j) {
+  const fit = Math.round(j.fit_score * 100);
+  const reasons = (j.reasons || []).map((r) => `<li class="flex gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color:var(--good)"></i><span>${esc(r)}</span></li>`).join('');
+  const unmet = (j.unmet || []).map((r) => `<li class="flex gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color:var(--warn)"></i><span>${esc(r)}</span></li>`).join('');
+  const applyUrl = j.url && j.url.startsWith('http') ? j.url : `https://www.google.com/search?q=${encodeURIComponent(j.title + ' ' + j.company + ' careers')}`;
+  
+  return `<div class="glass rounded-3xl p-6 relative flex flex-col justify-between" style="border: 1px solid rgba(255,255,255,0.06)">
+    <div>
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <span class="chip ${j.eligible ? 'badge-good' : 'badge-warn'} text-[10px] uppercase font-bold px-2 py-0.5 rounded-full mb-1 inline-block">
+            ${j.eligible ? 'Eligible' : 'Gaps Detected'}
+          </span>
+          <h3 class="font-display font-semibold text-lg leading-snug mt-1">${esc(j.title)}</h3>
+          <p class="text-sm text-[var(--gold-2)] font-medium">${esc(j.company)}</p>
+        </div>
+        <div class="text-right">
+          <span class="num text-2xl font-semibold text-[var(--good)]">${fit}%</span>
+          <p class="text-[9px] uppercase tracking-wider text-[var(--muted)] mt-0.5">match fit</p>
+        </div>
+      </div>
+      
+      <p class="text-xs text-[var(--muted)] mt-3 leading-relaxed">${esc(j.description)}</p>
+
+      <div class="mt-4 flex flex-wrap gap-4 text-xs">
+        <span class="flex items-center gap-1 text-[var(--muted)]"><i data-lucide="banknote" class="w-4 h-4 text-[var(--gold-2)]"></i> ${esc(j.salary)}</span>
+        <span class="flex items-center gap-1 text-[var(--muted)]"><i data-lucide="map-pin" class="w-4 h-4"></i> ${esc(j.location)}</span>
+      </div>
+
+      <!-- Eligibility checklist -->
+      <div class="mt-4 border-t pt-3 border-dashed" style="border-color:rgba(255,255,255,0.06)">
+        <p class="text-[11px] font-semibold text-[var(--gold-2)] mb-1">Career & Qualifications Match:</p>
+        <ul class="text-[11px] space-y-1.5 text-[var(--muted)]">
+          ${reasons}
+          ${unmet}
+        </ul>
+      </div>
+    </div>
+    
+    <div class="mt-5 flex gap-2">
+      <a href="${esc(applyUrl)}" target="_blank" rel="noopener" class="btn btn-primary text-xs w-full py-2.5 text-center flex items-center justify-center gap-1.5">
+        Apply Now <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+      </a>
+    </div>
+  </div>`;
+}
+
 
 // ───────── boot ─────────
 async function boot() {

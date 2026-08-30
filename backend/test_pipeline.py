@@ -14,11 +14,11 @@ print("LifePilot Agent Pipeline Test")
 print("=" * 55)
 
 # 1. Run the agent pipeline on an existing profile
-print("\n[1/3] Running Agent Pipeline (profile_id=4)...")
+print("\n[1/3] Running Agent Pipeline (profile_id=1)...")
 print("  (This calls Groq LLM + Serper search - may take 30-60s)")
 start = time.time()
 try:
-    r = httpx.post(f"{BASE}/api/agent/run/4", timeout=120)
+    r = httpx.post(f"{BASE}/api/agent/run/1", timeout=120)
     elapsed = time.time() - start
     print(f"  HTTP Status: {r.status_code}")
     print(f"  Time: {elapsed:.1f}s")

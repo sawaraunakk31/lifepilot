@@ -56,8 +56,53 @@ def init_db() -> None:
 
     # Safe schema migration for existing PostgreSQL / SQLite tables
     from sqlalchemy import text
+    migrations = [
+        "ALTER TABLE profiles ADD COLUMN user_id VARCHAR(120);",
+        "ALTER TABLE match_results ADD COLUMN description TEXT;",
+        "ALTER TABLE match_results ADD COLUMN criteria JSON;",
+        "ALTER TABLE match_results ALTER COLUMN opportunity_id TYPE VARCHAR(400);",
+        "ALTER TABLE match_results ALTER COLUMN title TYPE VARCHAR(400);",
+        "ALTER TABLE match_results ALTER COLUMN provider TYPE VARCHAR(400);",
+        "ALTER TABLE match_results ALTER COLUMN url TYPE VARCHAR(1000);",
+        "ALTER TABLE match_results ALTER COLUMN amount TYPE VARCHAR(300);",
+    ]
+    for stmt in migrations:
+        try:
+            with engine.begin() as conn:
+                conn.execute(text(stmt))
+        except Exception:
+            pass
+
+    # Seed job opportunities if empty
+    from app.models import JobOpportunity
+    from pathlib import Path
+    import json
+    
+    db = SessionLocal()
     try:
-        with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE profiles ADD COLUMN IF NOT EXISTS user_id VARCHAR(120);"))
-    except Exception:
+        if db.query(JobOpportunity).count() == 0:
+            data_file = Path(__file__).resolve().parent / "data" / "indian_jobs.json"
+            if data_file.exists():
+                with open(data_file, encoding="utf-8") as f:
+                    jobs = json.load(f)
+                for item in jobs:
+                    job_op = JobOpportunity(
+                        id=item.get("id"),
+                        title=item.get("title"),
+                        company=item.get("company"),
+                        location=item.get("location"),
+                        job_type=item.get("job_type"),
+                        country=item.get("country"),
+                        salary_num=item.get("salary_num"),
+                        salary=item.get("salary"),
+                        description=item.get("description"),
+                        url=item.get("url"),
+                        category=item.get("category", "job"),
+                        source=item.get("source", "database")
+                    )
+                    db.add(job_op)
+                db.commit()
+    except Exception as e:
         pass
+    finally:
+        db.close()

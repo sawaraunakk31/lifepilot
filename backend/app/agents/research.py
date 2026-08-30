@@ -27,7 +27,27 @@ class ResearchAgent(BaseAgent):
     description = "Discovers opportunities dynamically via LangGraph web search and scraping"
 
     def execute(self, state: AgentState) -> AgentState:
-        # Build and run the LangGraph workflow
+        # 1. Sources: Curated local dataset from scholarships.json
+        curated_schemes = []
+        try:
+            from app.knowledge.vectorstore import DATA_FILE
+            if DATA_FILE.exists():
+                with open(DATA_FILE, encoding="utf-8") as f:
+                    curated_schemes = json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load curated scholarships: {e}")
+
+        # If running in What-If Simulation mode, skip slow live web search and return curated schemes immediately
+        if state.profile.get("name") == "Simulation":
+            state.raw_opportunities = curated_schemes
+            state.add_log(
+                agent=self.name,
+                message=f"Discovered {len(curated_schemes)} curated opportunities (fast simulation mode).",
+                confidence=1.0
+            )
+            return state
+
+        # 2. Build and run the LangGraph workflow for web discovery
         graph = build_graph()
         
         # Initial state for the sub-graph
@@ -41,12 +61,12 @@ class ResearchAgent(BaseAgent):
             "logs": []
         }
         
+        scraped_opps = []
         try:
             logger.info("Starting LangGraph research workflow...")
             result_state = graph.invoke(initial_state)
+            scraped_opps = result_state.get("opportunities", [])
             
-            # Transfer opportunities and logs to the main pipeline state
-            state.raw_opportunities = result_state.get("opportunities", [])
             for log in result_state.get("logs", []):
                 state.add_log(
                     agent=log.get("agent", "LangGraph"),
@@ -61,4 +81,29 @@ class ResearchAgent(BaseAgent):
             logger.error(f"LangGraph execution failed: {e}")
             state.errors.append(f"LangGraph failure: {e}")
             
+        # 3. Merge & de-duplicate opportunities
+        seen = set()
+        merged = []
+        garbage_titles = {
+            "find schemes based", 
+            "for government schemes", 
+            "find schemes based on your eligibility",
+            "search schemes"
+        }
+        for item in curated_schemes + scraped_opps:
+            title = item.get("title", "").strip()
+            title_lower = title.lower()
+            if not title or title_lower in seen:
+                continue
+            if title_lower in garbage_titles or any(g in title_lower for g in ("based on your eligibility", "discover schemes")):
+                continue
+            seen.add(title_lower)
+            merged.append(item)
+            
+        state.raw_opportunities = merged
+        state.add_log(
+            agent=self.name,
+            message=f"Discovered {len(merged)} total opportunities ({len(curated_schemes)} curated, {len(scraped_opps)} discovered).",
+            confidence=0.95
+        )
         return state

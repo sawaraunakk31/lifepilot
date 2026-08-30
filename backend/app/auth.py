@@ -44,6 +44,13 @@ def get_jwks_client() -> Optional[PyJWKClient]:
 
 def verify_kinde_token(token: str) -> dict[str, Any]:
     """Verify and decode a Kinde JWT token using Kinde's JWKS."""
+    if token in ("guest_mock_access_token", "guest_mock_id_token"):
+        return {
+            "sub": "guest_citizen",
+            "email": "guest@lifepilot.local",
+            "name": "Guest Citizen",
+        }
+
     if not settings.kinde_domain:
         try:
             return jwt.decode(token, options={"verify_signature": False})
@@ -141,7 +148,9 @@ def generate_pkce_pair() -> tuple[str, str]:
 def login(request: Request):
     """Direct HTTP redirect to Kinde Auth login page with PKCE challenge."""
     if not settings.kinde_domain or not settings.kinde_client_id:
-        return RedirectResponse(url="/")
+        # Mock guest login bypass
+        base_url = str(request.base_url).rstrip("/")
+        return RedirectResponse(url=f"{base_url}/?code=guest_mock_code")
 
     domain = settings.kinde_domain.rstrip("/")
     base_url = str(request.base_url).rstrip("/")
@@ -185,6 +194,40 @@ def logout(request: Request):
 @router_auth.post("/exchange")
 def exchange_token(req: ExchangeRequest, request: Request):
     """Exchange authorization code for Kinde access and ID tokens."""
+    if req.code == "guest_mock_code":
+        guest_user = {
+            "id": "guest_citizen",
+            "email": "guest@lifepilot.local",
+            "name": "Guest Citizen",
+            "picture": None,
+        }
+        # Persist Guest Citizen in local DB
+        try:
+            from datetime import datetime, timezone
+            from app.database import SessionLocal
+            from app.models import User
+
+            with SessionLocal() as db:
+                user_obj = db.query(User).filter(User.id == "guest_citizen").first()
+                if not user_obj:
+                    user_obj = User(
+                        id="guest_citizen",
+                        email="guest@lifepilot.local",
+                        name="Guest Citizen",
+                        created_at=datetime.now(timezone.utc),
+                        last_login_at=datetime.now(timezone.utc),
+                    )
+                    db.add(user_obj)
+                db.commit()
+        except Exception as e:
+            logger.warning(f"Could not persist guest user: {e}")
+
+        return {
+            "access_token": "guest_mock_access_token",
+            "id_token": "guest_mock_id_token",
+            "user": guest_user,
+        }
+
     if not settings.kinde_domain or not settings.kinde_client_id:
         raise HTTPException(status_code=400, detail="Kinde auth is not configured.")
 

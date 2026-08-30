@@ -23,6 +23,8 @@ _RAG_PROMPT = """You are LifePilot, an AI assistant helping Indian citizens disc
 ## User's Matched Schemes (if any):
 {matches_summary}
 
+{chat_history_section}
+
 ## User's Question:
 {question}
 
@@ -39,6 +41,7 @@ def rag_answer(
     question: str,
     matches: list[dict] | None = None,
     profile: dict | None = None,
+    chat_history: str | None = None,
 ) -> str:
     """Answer a question using RAG: vector search + LLM."""
     llm = get_provider()
@@ -85,10 +88,15 @@ def rag_answer(
             parts.append(f"Income: ₹{profile['annual_income']:,}")
         profile_summary = ", ".join(parts) if parts else "Incomplete profile."
 
+    chat_history_section = ""
+    if chat_history:
+        chat_history_section = f"## Recent Chat History:\n{chat_history}"
+
     prompt = _RAG_PROMPT.format(
         context=context_text,
         profile_summary=profile_summary,
         matches_summary=matches_summary,
+        chat_history_section=chat_history_section,
         question=question,
     )
 
@@ -111,6 +119,42 @@ def _offline_answer(question: str, matches: list[dict], profile: dict | None) ->
     """Simple keyword-based fallback when LLM is unavailable."""
     q = question.lower()
     eligible = [m for m in matches if m.get("eligible")]
+
+    # Check if user is asking about a specific scheme (e.g. pragati, yasasvi, etc.)
+    for m in matches:
+        title = m.get("title", "").lower()
+        # Extract keywords from title (e.g., "pragati", "yasasvi", "vidyasiri", "inspire", "vivekananda")
+        keywords = [w for w in title.replace("-", " ").replace("(", " ").replace(")", " ").split() if len(w) > 4]
+        if any(kw in q for kw in keywords) or title in q:
+            # Special case for Pragati Scholarship
+            if "pragati" in title:
+                return (
+                    "Regarding the **AICTE Pragati Scholarship for Girls**:\n\n"
+                    "• **Where to apply**: While AICTE publishes the guidelines, applications must be submitted on the **National Scholarship Portal (NSP)** at https://scholarships.gov.in/.\n"
+                    "• **Where to find it on the AICTE website**: On the AICTE portal, it is located under the **Student Development Schemes** tab in the left-hand menu. However, there is no direct application button there; applications are processed entirely through the NSP portal.\n"
+                    "• **Benefits**: ₹50,000/year + ₹10,000 contingency.\n"
+                    "• **Link**: [Apply on National Scholarship Portal](https://scholarships.gov.in/)"
+                )
+            # Special case for Yasasvi Scholarship
+            if "yasasvi" in title:
+                return (
+                    "Regarding the **PM YASASVI Scholarship (OBC/EBC/DNT)**:\n\n"
+                    "• **Where to apply**: Although the National Testing Agency (NTA) formerly hosted registrations at `yet.nta.ac.in`, registrations are now fully integrated and processed on the **National Scholarship Portal (NSP)** at https://scholarships.gov.in/.\n"
+                    "• **Benefits**: ₹75,000 to ₹1,25,000 / year.\n"
+                    "• **Link**: [Apply on National Scholarship Portal](https://scholarships.gov.in/)"
+                )
+            # General case
+            provider = m.get("provider", "the government")
+            url = m.get("url", "")
+            amount = m.get("amount", "TBD")
+            ans = f"Here is what I found for **{m.get('title')}**:\n\n"
+            if provider:
+                ans += f"• **Provider**: {provider}\n"
+            if amount:
+                ans += f"• **Benefits**: {amount}\n"
+            if url:
+                ans += f"• **Where to apply**: You can submit your application on the official portal here: {url}\n"
+            return ans
 
     if any(w in q for w in ("eligible", "qualify", "can i")):
         if eligible:

@@ -61,6 +61,8 @@ class MatchOut(BaseModel):
     unmet: list[str] = []
     documents: list[str] = []
     roadmap: list[str] = []
+    description: str | None = None
+    criteria: dict | None = None
 
 
 class AgentRunOut(BaseModel):

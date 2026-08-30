@@ -50,6 +50,8 @@ def run_agents(profile_id: int, db: Session = Depends(get_db)):
             unmet=m.get("unmet", []),
             documents=m.get("documents", []),
             roadmap=m.get("roadmap", []),
+            description=m.get("description"),
+            criteria=m.get("criteria", {}),
         ))
 
     db.commit()
@@ -64,6 +66,7 @@ def run_agents(profile_id: int, db: Session = Depends(get_db)):
 def simulate(payload: schemas.SimulateRequest):
     """What-if simulator: evaluate an arbitrary profile WITHOUT saving."""
     data = payload.model_dump()
+    data["name"] = "Simulation"
     owned = data.pop("owned_documents", [])
     profile = SimpleNamespace(**data, owned_documents=owned)
     result = Orchestrator().run(profile, owned_documents=owned)

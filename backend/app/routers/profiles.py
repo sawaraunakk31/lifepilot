@@ -112,8 +112,8 @@ async def parse_resume(file: UploadFile = File(...)):
         {text[:5000]}
         """
         
-        # We use standard chat since this is an isolated task
-        response = llm.chat(prompt, system_prompt="You are a strict JSON data extractor. Output only raw JSON.")
+        # We use standard generate since this is an isolated task
+        response = llm.generate(prompt, system="You are a strict JSON data extractor. Output only raw JSON.")
         
         # Clean JSON if wrapped in markdown
         cleaned = response.strip()

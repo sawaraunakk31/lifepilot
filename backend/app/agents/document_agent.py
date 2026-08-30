@@ -20,11 +20,10 @@ class DocumentAgent(BaseAgent):
     def execute(self, state: AgentState) -> AgentState:
         matches = state.matches
         owned = {d.strip().lower() for d in state.owned_documents if d.strip()}
-        eligible = [m for m in matches if m.get("eligible")]
 
-        # Build de-duplicated master checklist
+        # Build de-duplicated master checklist across all matches (eligible + partial)
         doc_map: dict[str, dict] = {}
-        for m in eligible:
+        for m in matches:
             for doc in m.get("documents", []):
                 key = doc.strip().lower()
                 if key not in doc_map:
@@ -61,8 +60,10 @@ class DocumentAgent(BaseAgent):
         state.add_log(
             agent=self.name,
             message=f"Built master document checklist: {total} unique documents needed "
-                    f"across {len(eligible)} eligible schemes. "
+                    f"across {len(matches)} schemes. "
                     f"You have {owned_count}/{total} ({readiness}% ready).",
             confidence=0.92,
         )
         return state
+
+
